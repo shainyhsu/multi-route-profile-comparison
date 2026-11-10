@@ -295,7 +295,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '點線上任一處：截掉前段或後段、新增點、改點的名稱。按住左右滑動可沿著線移動。': 'Tap anywhere on a line to trim the part before or after it, add a point, or rename a point. Hold and slide sideways to move along the line.',
     '點線上任一處開始編輯。': 'Tap a line to start editing.', '海拔': 'elev.', '從這裡開始（截掉前段）': 'Start here (trim before)', '到這裡結束（截掉後段）': 'End here (trim after)',
     '在這裡新增點': 'Add a point here', '點的名稱': 'Point name', '顯示在圖卡': 'Show on the card', '刪除這個點': 'Delete this point', '恢復全段': 'Restore full route',
-    '新的點': 'New point', '收起': 'Hide', '展開': 'Show', '往前': 'Back', '往後': 'Forward', '這裡太靠近另一端，至少要留 100 m。': 'Too close to the other end; keep at least 100 m.',
+    '新的點': 'New point', '收起': 'Hide', '複製一條': 'Duplicate', '展開': 'Show', '往前': 'Back', '往後': 'Forward', '這裡太靠近另一端，至少要留 100 m。': 'Too close to the other end; keep at least 100 m.',
     '加入 GPX 後，這裡會出現圖卡。': 'Add a GPX file to see the card here.',
     '下載 JPG': 'Download JPG',
     '分享圖片': 'Share',
@@ -1313,7 +1313,7 @@ details.help a{color:var(--accent);word-break:break-all}
         '<div class="rt-head"><button type="button" class="grip" data-grip="1" aria-label="' + esc(_t('拖曳調整順序')) + '" title="' + esc(_t('拖曳調整順序')) + '"><span class="no">' + (ri + 1) + '</span><svg viewBox="0 0 10 16" aria-hidden="true"><circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/></svg></button>' + lineTile(r, isM, 'rt-sw') + '<input class="nm" type="text" data-k="name" value="' + esc(r.name) + '" aria-label="' + esc(_t('路線名稱')) + '">' +
         '<button type="button" class="iconbtn" data-act="del" aria-label="' + esc(_t('移除這條路線')) + '" title="' + esc(_t('移除這條路線')) + '">' + TRASH + '</button></div>' +
         '<p class="rt-meta">' + metaHtml(r) + '</p>' +
-        (isM ? '' : '<div class="rt-acts"><button type="button" class="btn ghost" data-act="main">' + esc(_t('設為主路線')) + '</button><label class="ck"><input type="checkbox" data-k="on"' + (r.o.off ? '' : ' checked') + '>' + esc(_t('畫在圖上')) + '</label></div>') +
+        '<div class="rt-acts">' + (isM ? '' : '<button type="button" class="btn ghost" data-act="main">' + esc(_t('設為主路線')) + '</button>') + '<button type="button" class="btn ghost" data-act="dup">' + esc(_t('複製一條')) + '</button>' + (isM ? '' : '<label class="ck"><input type="checkbox" data-k="on"' + (r.o.off ? '' : ' checked') + '>' + esc(_t('畫在圖上')) + '</label>') + '</div>' +
         '<details class="disc" data-open="' + r.id + '"' + (OPEN[r.id] ? ' open' : '') + '><summary>' + esc(_t('調整：範圍、名稱、線色、揹負、備註')) + '</summary><div class="adj">' +
           '<div class="inline">' + esc(_t('範圍')) + ' ' + esc(_t('從')) + ' <select data-k="fromSel" aria-label="' + esc(_t('從')) + '">' + opts + '</select> ' + esc(_t('到')) + ' <select data-k="toSel" aria-label="' + esc(_t('到')) + '">' + opts + '</select></div>' +
           '<div class="inline">' + esc(_t('或')) + ' <input type="number" data-k="from" step="0.1" min="0" inputmode="decimal" value="' + fmtKm(r.o.from) + '" placeholder="0" aria-label="km"> km ' + esc(_t('到')) + ' <input type="number" data-k="to" step="0.1" min="0" inputmode="decimal" value="' + fmtKm(r.o.to) + '" placeholder="' + km1(b.total) + '" aria-label="km"> km <button type="button" class="btn ghost" data-act="full">' + esc(_t('全段')) + '</button> <span class="hint">' + esc(_f('GPX 全長 {0} km', km2(b.total))) + '</span></div>' +
@@ -1368,6 +1368,11 @@ details.help a{color:var(--accent);word-break:break-all}
     var r = byEl(bt), act = bt.getAttribute('data-act'); if (!r) return;
     if (act === 'del') { ROUTES = ROUTES.filter(function (q) { return q !== r; }); }
     else if (act === 'main') { ROUTES = [r].concat(ROUTES.filter(function (q) { return q !== r; })); }
+    else if (act === 'dup') {   // the same GPX again, to trim into another section (each copy's distance starts at 0)
+      var c = { id: SEQ++, name: r.name + paren('2'), file: r.file, recorded: r.recorded, color: -1, pts: r.pts, wpts: JSON.parse(JSON.stringify(r.wpts)), o: JSON.parse(JSON.stringify(r.o)) };
+      c.o.off = false; c.color = freeColor(-1);
+      ROUTES.splice(ROUTES.indexOf(r) + 1, 0, c);
+    }
     else if (act === 'full') { r.o.from = r.o.to = null; }
     else if (act === 'color') {
       var c = +bt.getAttribute('data-c'), other = shown().filter(function (q) { return q !== r && q.color === c; })[0];
@@ -1536,10 +1541,10 @@ details.help a{color:var(--accent);word-break:break-all}
     document.body.classList.toggle('edock', on);
     document.documentElement.style.setProperty('--edh', (on ? card.offsetHeight : 0) + 'px');
   }
-  function edHit(px, py, only) {
+  function edHit(px, py, only, free) {   // free: while sliding, never stick to a point
     if (!ED) return null;
     var best = null;
-    ED.rs.forEach(function (r) {
+    if (!free) ED.rs.forEach(function (r) {
       if (only && r.id !== only) return;
       edPts(r).forEach(function (m) {
         var d = Math.hypot(ED.sx(m.x) - px, ED.sy(zAt(r.p.x, r.p.z, m.x) - r.p.z0) - (only ? ED.sy(zAt(r.p.x, r.p.z, m.x) - r.p.z0) : py));
@@ -1572,7 +1577,8 @@ details.help a{color:var(--accent);word-break:break-all}
     if (m) {
       h += '<label class="field">' + esc(_t('點的名稱')) + '<input type="text" data-e="name" value="' + esc(m.name) + '"></label>';
       if (m.key !== 's' && m.key !== 'e') h += '<label class="ck"><input type="checkbox" data-e="show"' + (m.show ? ' checked' : '') + '>' + esc(_t('顯示在圖卡')) + '</label>';
-      if (m.user) h += '<div class="row"><button type="button" class="btn ghost" data-e="delpt">' + esc(_t('刪除這個點')) + '</button></div>';
+      var cuts = (m.key !== 's' ? '<button type="button" class="btn" data-e="cutA">' + esc(_t('從這裡開始（截掉前段）')) + '</button>' : '') + (m.key !== 'e' ? '<button type="button" class="btn" data-e="cutB">' + esc(_t('到這裡結束（截掉後段）')) + '</button>' : '');
+      if (cuts || m.user) h += '<div class="row">' + cuts + (m.user ? '<button type="button" class="btn ghost" data-e="delpt">' + esc(_t('刪除這個點')) + '</button>' : '') + '</div>';
     } else {
       h += '<div class="row"><button type="button" class="btn" data-e="cutA">' + esc(_t('從這裡開始（截掉前段）')) + '</button><button type="button" class="btn" data-e="cutB">' + esc(_t('到這裡結束（截掉後段）')) + '</button><button type="button" class="btn primary" data-e="add">' + esc(_t('在這裡新增點')) + '</button></div>';
     }
@@ -1594,7 +1600,7 @@ details.help a{color:var(--accent);word-break:break-all}
     });
     cv.addEventListener('pointermove', function (e) {
       if (!EDRAG || !SEL) return;
-      var q = pos(e), h = edHit(q[0], q[1], SEL.id); if (!h) return;
+      var q = pos(e), h = edHit(q[0], q[1], SEL.id, true); if (!h) return;
       SEL.x = h.x; SEL.pt = h.pt; drawEdit(); renderEdit();
     });
     function up() { EDRAG = false; }
