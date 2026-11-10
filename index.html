@@ -1,0 +1,1524 @@
+<!doctype html><html lang="zh-Hant"><head><script>(function(){var t="dark";try{t=localStorage.getItem("theme")||"dark"}catch(e){}document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark")})()</script><meta name="google-site-verification" content="EuIdbRlGY2Q9T_6FGNII7Cd8TPY33RUsOWCTVUMIB4U" /><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>路線剖面比較｜GPX 登山路線高度剖面比較圖（A4 直式／橫式 JPG）</title>
+<meta name="description" content="上傳多條 GPX，把登山路線的距離與高度剖面疊在一起比較：縱軸是相對起點的高度，主路線依坡度分色，附 1:1 實際比例剖面、坡度帶與坡度分級表，輸出 A4 直式或橫式 JPG（300 dpi）。">
+<link rel="canonical" href="https://shainyhsu.github.io/multi-route-profile-comparison/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Multi-Route Profile Comparison — elevation profiles of hiking routes side by side">
+<meta property="og:description" content="Load several GPX tracks and compare their distance–elevation profiles on one chart: elevation relative to the start, a main route shaded by grade, a true-scale (1:1) profile, grade bands and a distance-by-grade table. Export A4 portrait or landscape JPG pages at 300 dpi.">
+<meta property="og:url" content="https://shainyhsu.github.io/multi-route-profile-comparison/">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_TW">
+<meta property="og:image" content="https://shainyhsu.github.io/multi-route-profile-comparison/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Multi-Route Profile Comparison: elevation profiles of several hiking routes on one chart, with a true-scale profile and a distance-by-grade table">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://shainyhsu.github.io/multi-route-profile-comparison/og.png">
+<meta name="twitter:image:alt" content="Multi-Route Profile Comparison: elevation profiles of several hiking routes on one chart, with a true-scale profile and a distance-by-grade table">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "路線剖面比較 Multi-Route Profile Comparison", "url": "https://shainyhsu.github.io/multi-route-profile-comparison/", "description": "上傳多條 GPX，把登山路線的距離與高度剖面疊在一起比較，輸出 A4 直式或橫式 JPG。", "applicationCategory": "SportsApplication", "operatingSystem": "Any", "inLanguage": ["zh-Hant", "en"], "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "TWD"}, "author": {"@type": "Person", "name": "Shainy Hsu", "url": "https://github.com/shainyhsu"}}</script>
+</head><body>
+<!-- 路線剖面比較 © 2026 shainyhsu. All rights reserved. 未經作者書面同意，不得重製、改作或散布本網站的程式碼與內容，也不得放進任何商業產品、服務或網站。 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: same field-card look as 步程試算 — phone: one column (路線 → 圖卡設定 → 預覽); laptop: inputs left, the card preview right */
+:root{
+  --bg:#f2f4f1; --surface:#ffffff; --ink:#16201a; --ink2:#4a574f; --muted:#7a877f; --line:#d8ded9; --soft:#eaeeea;
+  --accent:#0c6a5d; --accent-ink:#ffffff; --accent-soft:#dcefe9;
+  --accent-hover:#09584d; --accent-line:#a3cdc3; --ctl-line:#c2cbc4; --shadow:rgba(22,32,26,.08);
+  --warn:#9a5a00; --warn-bg:#fff0d4; --crit:#a32632; --crit-bg:#fbe2e4;
+  --font-ui:"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+  --font-num:"Barlow Semi Condensed","Roboto Condensed","Arial Narrow",var(--font-ui);
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1411; --surface:#172019; --ink:#e4ebe6; --ink2:#c8d4cd; --muted:#87958c; --line:#2a352e; --soft:#1e2822;
+  --accent:#5cc4b2; --accent-ink:#0b1512; --accent-soft:#18332d;
+  --accent-hover:#7fd6c7; --accent-line:#2f6a5f; --ctl-line:#3b4a41; --shadow:rgba(0,0,0,.45);
+  --warn:#f1b24f; --warn-bg:#3a2b0e; --crit:#ff8a93; --crit-bg:#3d161b; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1411; --surface:#172019; --ink:#e4ebe6; --ink2:#c8d4cd; --muted:#87958c; --line:#2a352e; --soft:#1e2822;
+  --accent:#5cc4b2; --accent-ink:#0b1512; --accent-soft:#18332d;
+  --accent-hover:#7fd6c7; --accent-line:#2f6a5f; --ctl-line:#3b4a41; --shadow:rgba(0,0,0,.45);
+  --warn:#f1b24f; --warn-bg:#3a2b0e; --crit:#ff8a93; --crit-bg:#3d161b; color-scheme:dark;
+}
+:root[lang=en]{--font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang TC","Noto Sans TC",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 24px;display:grid;gap:14px}
+h1,h2{margin:0;text-wrap:balance}
+h1{font-size:1.45rem;letter-spacing:.02em}
+h2{font-size:1.02rem}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.topbar h1{flex:1 1 auto;min-width:0;line-height:1.25;overflow-wrap:break-word}
+.tbctl{display:flex;align-items:center;gap:6px;flex:none;margin-left:auto}
+.hbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;margin:0;border:1px solid var(--ctl-line);border-radius:8px;background:var(--surface);color:var(--ink2);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hbtn:hover{background:var(--bg)}
+.hbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.cols{display:grid;gap:14px;min-width:0}
+.col{display:grid;gap:14px;min-width:0;align-content:start}
+@media (min-width:980px){
+  .wrap{max-width:1360px}
+  .cols{grid-template-columns:minmax(360px,470px) minmax(0,1fr);align-items:start}
+  #prevCard{position:sticky;top:12px}
+  .prev{max-height:calc(100vh - 150px);overflow:auto;overscroll-behavior:contain;padding:2px}
+}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-size:.93rem;font-weight:600;border:1px solid var(--ctl-line);background:var(--surface);color:var(--ink);padding:.5rem .9rem;border-radius:9px;cursor:pointer;line-height:1.2;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:42px;box-shadow:0 1px 2px var(--shadow);transition:border-color .15s,color .15s,background-color .15s}
+.btn svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:active{transform:translateY(1px);box-shadow:none}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:var(--accent-ink)}
+.btn.ghost{background:transparent;box-shadow:none;color:var(--ink2);border-color:var(--line);font-weight:500}
+.btn.ghost:hover{color:var(--accent);border-color:var(--accent)}
+.btn.arm{border-color:var(--crit);color:var(--crit)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.hbtn:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{margin:0;color:var(--ink);font-size:1rem;line-height:1.5}
+.status b{font-family:var(--font-num);font-size:1.12rem}
+.error{margin:0;color:var(--crit);background:var(--crit-bg);border-radius:8px;padding:.55rem .7rem;font-size:.92rem}
+.warnbox{margin:0;color:var(--warn);background:var(--warn-bg);border-radius:8px;padding:.55rem .7rem;font-size:.92rem}
+.hint{color:var(--muted);font-size:.84rem;margin:0}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.form label,.field{display:grid;gap:6px;font-size:1rem;color:var(--ink);min-width:0;font-weight:600}
+.full{grid-column:1/-1}
+input,select,textarea{font:inherit;font-size:17px;color:var(--ink);background:var(--bg);border:1.5px solid var(--ctl-line);border-radius:10px;padding:.5rem .7rem;min-height:46px;width:100%;min-width:0}
+textarea{min-height:76px;resize:vertical;line-height:1.5}
+input[type=number]{font-family:var(--font-num);font-weight:700;font-size:18px;letter-spacing:.02em}
+input[type=checkbox]{width:1.25rem;height:1.25rem;min-height:0;padding:0;accent-color:var(--accent);flex:none}
+@media (max-width:420px){ .form{grid-template-columns:1fr} .card{padding:12px} .btn{min-height:44px} }
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--soft)}
+.seg input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.seg label{display:inline-flex;align-items:center;padding:.45rem .9rem;min-height:40px;cursor:pointer;font-size:.93rem;color:var(--ink2);font-weight:500}
+.seg input:checked+label{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:-2px}
+.setrow{display:grid;gap:6px;min-width:0}
+.setrow>span{font-weight:600;font-size:1rem}
+details.help{margin:0;min-width:0}
+details.help>summary{list-style:none;display:inline-flex;align-items:center;gap:.45rem;min-height:40px;padding:.2rem .8rem .2rem .55rem;border:1px solid var(--line);border-radius:999px;background:var(--soft);color:var(--ink2);font-size:.92rem;font-weight:600;cursor:pointer}
+details.help>summary::-webkit-details-marker{display:none}
+details.help>summary::before{content:"?";display:inline-grid;place-items:center;width:1.25rem;height:1.25rem;border-radius:50%;background:var(--surface);color:var(--accent);font-size:.78rem;font-weight:700;border:1px solid var(--accent-line)}
+details.help[open]>summary{margin-bottom:8px}
+details.help p{margin:0 0 .5rem;color:var(--ink);font-size:.98rem;line-height:1.7}
+details.disc>summary{list-style:none;display:flex;align-items:center;gap:.55rem;min-height:40px;padding:.4rem .7rem;border:1px solid var(--ctl-line);border-radius:9px;background:var(--surface);color:var(--ink);font-weight:600;font-size:.9rem;cursor:pointer}
+details.disc>summary::-webkit-details-marker{display:none}
+details.disc>summary::before{content:"";flex:none;width:.42rem;height:.42rem;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(-45deg);margin:0 .2rem 0 .1rem;transition:transform .15s}
+details.disc[open]>summary::before{transform:rotate(45deg) translate(-1px,-1px)}
+details.disc>summary:hover{border-color:var(--accent);color:var(--accent)}
+details.disc[open]>summary{margin-bottom:10px}
+/* route list */
+.rts{display:grid;gap:10px;min-width:0}
+.rt{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:8px;min-width:0;background:var(--surface)}
+.rt.main{border-color:var(--accent-line);background:var(--accent-soft)}
+.rt-head{display:flex;align-items:center;gap:8px;min-width:0}
+.rt-head .nm{flex:1 1 auto;min-height:42px;font-weight:700;font-size:16px;padding:.4rem .6rem}
+.rt-sw{flex:none;width:34px;height:34px;display:block}
+.rt-meta{margin:0;color:var(--ink2);font-size:.92rem;line-height:1.5;font-family:var(--font-num),var(--font-ui)}
+.rt-meta .tag{display:inline-block;font-family:var(--font-ui);font-size:.74rem;font-weight:600;padding:0 .45rem;border-radius:999px;background:var(--soft);color:var(--ink2);margin-left:4px;vertical-align:1px}
+.rt.main .rt-meta .tag{background:var(--surface)}
+.rt-acts{display:flex;flex-wrap:wrap;gap:6px}
+.rt-acts .btn{min-height:36px;padding:.35rem .7rem;font-size:.86rem}
+.iconbtn{flex:none;width:38px;height:38px;display:inline-grid;place-items:center;border:1px solid var(--ctl-line);border-radius:9px;background:var(--surface);color:var(--ink2);cursor:pointer}
+.iconbtn:hover{border-color:var(--crit);color:var(--crit)}
+.iconbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.adj{display:grid;gap:10px;min-width:0}
+.adj .inline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:.95rem}
+.adj .inline input[type=number]{width:5.6rem}
+.adj .inline select{width:auto;max-width:100%;min-height:42px;font-size:15px}
+.adj .inline .grow{flex:1 1 9rem;width:auto;min-height:42px;font-size:15px}
+.adj textarea{min-height:70px;font-size:15px}
+.adj label.ck{display:flex;align-items:center;gap:8px;font-size:.95rem;font-weight:500}
+.colors{display:flex;flex-wrap:wrap;gap:6px}
+.colors button{width:34px;height:34px;border-radius:8px;border:0;box-shadow:0 0 0 1px var(--muted);cursor:pointer;padding:0}
+.colors button.edge{box-shadow:inset 0 0 0 2px #16201a,0 0 0 1px var(--muted)}
+.colors button[aria-pressed=true]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.colors button.edge[aria-pressed=true]{box-shadow:inset 0 0 0 2px #16201a,0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.colors button:disabled{opacity:.28;cursor:default}
+.pts{display:grid;gap:6px}
+.pts .pt{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.pts .pt input[type=text]{min-height:38px;font-size:15px;padding:.3rem .55rem}
+.pts .pt .km{font-family:var(--font-num);font-weight:600;color:var(--ink2);font-size:.95rem;white-space:nowrap}
+#routeCard.over{outline:2px dashed var(--accent);outline-offset:-4px;background:var(--accent-soft)}
+details.help p.hint{font-size:.84rem;color:var(--muted);line-height:1.6}
+details.help a{color:var(--accent);word-break:break-all}
+/* preview */
+.prev{position:relative;min-width:0}
+.pages{display:grid;gap:14px;justify-items:center;min-width:0}
+.pages canvas{display:block;max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:2px;box-shadow:0 1px 4px var(--shadow)}
+.prev .empty{border:1px dashed var(--ctl-line);border-radius:8px;padding:28px 14px;text-align:center;color:var(--ink2)}
+.outinfo{margin:0 0 0 4px;color:var(--ink2);font-size:.9rem;font-family:var(--font-num),var(--font-ui)}
+.status:empty{display:none}
+.rights{margin:22px 4px 8px;color:var(--ink2);font-size:.82rem;line-height:1.7;text-align:center}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+
+<main class="wrap">
+  <header class="topbar">
+    <h1 id="appTitle">路線剖面比較</h1>
+    <div class="tbctl">
+      <button type="button" class="hbtn" id="themeToggle"></button>
+      <button type="button" class="hbtn" id="langBtn" aria-label="Switch to English" title="English"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.9 10h14.2"/><path d="M10 2.75c2 2 3 4.4 3 7.25s-1 5.25-3 7.25c-2-2-3-4.4-3-7.25s1-5.25 3-7.25z"/></svg></button>
+    </div>
+  </header>
+  <details class="help intro"><summary>說明</summary>
+    <p>把幾條登山路線的距離與高度剖面放在同一張圖比較。第一條是主路線，依坡度分色；其他路線從同一個起點畫起，線尾標終點名稱與實際海拔。</p>
+    <p>圖卡含 1:1 實際比例剖面、高度剖面、圖例、坡度帶與坡度分級表，存成 A4 直式或橫式 JPG（300 dpi，直式 2,480 × 3,508 px）；路線多時自動分成多頁。</p>
+    <p>檔案只在你的瀏覽器裡處理，不會上傳。GPX 缺高度時，才會下載路線附近的內政部 20 m 地形圖磚來補。</p>
+  </details>
+
+  <div class="cols">
+    <div class="col">
+      <section class="card" id="routeCard" aria-labelledby="hRoutes">
+        <h2 id="hRoutes">路線</h2>
+        <div class="row">
+          <label class="btn primary" for="file"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.75H4.5A1.75 1.75 0 0 0 2.75 3.5v9a1.75 1.75 0 0 0 1.75 1.75h7a1.75 1.75 0 0 0 1.75-1.75V6z"/><path d="M9 1.75V6h4.25"/><path d="M8 12V8.25M6.4 9.85 8 8.25l1.6 1.6"/></svg>加入 GPX／KML 檔</label>
+          <input type="file" id="file" accept=".gpx,.kml,.kmz,application/gpx+xml,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz" multiple hidden>
+          <button class="btn" id="btnSample" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 4.5c-1.2-1-2.9-1.5-5.25-1.5v9.5c2.35 0 4.05.5 5.25 1.5 1.2-1 2.9-1.5 5.25-1.5V3C10.9 3 9.2 3.5 8 4.5z"/><path d="M8 4.5V14"/></svg>載入範例</button>
+          <button class="btn ghost" id="btnClear" type="button">全部移除</button>
+        </div>
+        <p class="hint" id="dropHint">也可以把檔案拖到這裡。第一條是主路線，最多 7 條（含主路線）。</p>
+        <p class="error" id="fileError" hidden></p>
+        <div class="rts" id="rts"></div>
+        <p class="hint" id="dtmStatus"></p>
+      </section>
+
+      <section class="card" id="setCard" aria-labelledby="hSet">
+        <h2 id="hSet">圖卡設定</h2>
+        <div class="form">
+          <label class="full" for="cTitle">標題<input type="text" id="cTitle" autocomplete="off"></label>
+          <label class="full" for="cSub">副標（選填）<input type="text" id="cSub" autocomplete="off" placeholder="例如：2026-11-15 單攻、紀錄來源"></label>
+          <label class="full" for="cNote">備註（選填，放在圖卡最下面）<textarea id="cNote"></textarea></label>
+        </div>
+        <div class="setrow"><span>圖片方向</span>
+          <div class="seg"><input type="radio" name="ori" id="oriP" value="p" checked><label for="oriP">直式</label><input type="radio" name="ori" id="oriL" value="l"><label for="oriL">橫式</label></div>
+          <p class="hint">A4、300 dpi，四邊留 10 mm 列印邊界；內容多時分成多頁。</p>
+        </div>
+        <details class="help"><summary>說明</summary>
+          <p>縱軸是相對起點的高度：每條線都從 0 km、0 m 起算，比的是陡度與長度；地名旁的數字是實際海拔。</p>
+          <p>高度直接用 GPX 的紀錄；GPX 缺高度的點，才用內政部 20 m 數值地形模型（台灣）補上，兩者的差異不計。</p>
+          <p>線色用高反差色盤，每條比較線另配不同線型，黑白雷射印表機印出來也分得開；淺色線加深色外框，線經過坡度色帶時加白邊。</p>
+          <p>實走紀錄（有時間戳記）會先去除停留時的 GPS 漂移：點與點至少相距 8 m。每條路線的「調整」可以選一段、反轉方向、依里程樁的實際距離等比例校正、改名稱與簡稱、換線色與線型、標揹負、寫備註，也能選要標在圖上的點。</p>
+          <p>標了揹負（重裝／輕裝）的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」；勾「列入坡度分級表」的路線列在表中，預設是主路線與實走紀錄。坡度每 100 m 一格；最陡的 300 m／1 km＝任一連續 300 m／1 km 的淨升換算成坡度。</p>
+          <p class="hint">地形資料：內政部 20 公尺網格數值地形模型資料；圖磚由 OsmHackTW terrain-rgb 於 2023 年轉製。此開放資料依政府資料開放授權條款（Open Government Data License）進行公眾釋出，使用者於遵守本條款各項規定之前提下，得利用之。政府資料開放授權條款：<a href="https://data.gov.tw/license" target="_blank" rel="noopener">https://data.gov.tw/license</a></p>
+        </details>
+      </section>
+    </div>
+
+    <section class="card" id="prevCard" aria-labelledby="hPrev">
+      <h2 id="hPrev">預覽</h2>
+      <div class="row">
+        <button class="btn primary" id="btnSave" type="button" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.75M5 7.5l3 3 3-3"/><path d="M2.75 11.5v1.25c0 .7.55 1.25 1.25 1.25h8c.7 0 1.25-.55 1.25-1.25V11.5"/></svg>下載 JPG</button>
+        <button class="btn" id="btnShare" type="button" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="12" cy="3.5" r="1.75"/><circle cx="4" cy="8" r="1.75"/><circle cx="12" cy="12.5" r="1.75"/><path d="m5.5 7.1 5-2.7M5.5 8.9l5 2.7"/></svg>分享圖片</button>
+        <span class="outinfo" id="outInfo"></span>
+      </div>
+      <p class="status" id="saveMsg" aria-live="polite"></p>
+      <div class="prev" id="prev"><div class="empty" id="prevEmpty">加入 GPX 後，這裡會出現圖卡。</div><div class="pages" id="pages" hidden></div></div>
+    </section>
+  </div>
+
+  <footer class="rights">© 2026 shainyhsu｜路線剖面比較<br>歡迎使用；未經作者書面同意，不得重製、改作或散布本網站的程式碼與內容，也不得放進任何商業產品、服務或網站。</footer>
+</main>
+<script type="application/json" id="sampleData">[{"name":"武陵山莊→桃山","nameEn":"Wuling Villa → Tao Mountain","pts":[[24.397564,121.307019,1835.5],[24.397083,121.307315,1898.5],[24.396976,121.307299,1899.2],[24.396904,121.307365,1899.0],[24.396903,121.307643,1896.0],[24.396964,121.307765,1896.0],[24.397056,121.307959,1891.9],[24.397129,121.30798,1890.9],[24.397503,121.308011,1891.8],[24.397662,121.307854,1893.6],[24.397908,121.307943,1892.1],[24.398194,121.308066,1902.8],[24.398266,121.308083,1899.7],[24.398356,121.308105,1900.6],[24.398476,121.308132,1901.9],[24.398611,121.308197,1907.2],[24.39895,121.308394,1910.4],[24.399048,121.308412,1913.2],[24.399155,121.30844,1912.4],[24.399339,121.308292,1910.4],[24.399412,121.308218,1914.6],[24.399541,121.308048,1917.6],[24.399647,121.308028,1919.8],[24.399887,121.307798,1920.4],[24.399987,121.30775,1924.3],[24.400205,121.307597,1921.7],[24.400288,121.307578,1923.9],[24.400437,121.307467,1923.5],[24.400416,121.307545,1922.9],[24.40045,121.307451,1930.6],[24.400524,121.307489,1921.3],[24.40058,121.307417,1925.8],[24.400776,121.307282,1925.3],[24.401069,121.307177,1937.4],[24.401165,121.30713,1938.0],[24.401404,121.307143,1939.5],[24.401481,121.307161,1937.9],[24.401673,121.307123,1942.2],[24.401798,121.30708,1941.6],[24.401894,121.307081,1945.9],[24.402059,121.307085,1948.4],[24.402277,121.30715,1950.1],[24.402348,121.307222,1949.3],[24.402463,121.307219,1949.1],[24.402649,121.307277,1951.7],[24.402871,121.307282,1958.3],[24.403005,121.307277,1955.7],[24.403172,121.307311,1956.2],[24.403283,121.307266,1959.6],[24.403511,121.30732,1967.9],[24.403767,121.307372,1964.5],[24.40394,121.307363,1966.1],[24.40405,121.307381,1971.2],[24.404139,121.307397,1968.7],[24.404332,121.307423,1967.9],[24.404458,121.307468,1969.1],[24.404874,121.307521,1975.5],[24.404997,121.307547,1980.9],[24.405113,121.307588,1981.6],[24.405163,121.307666,1980.0],[24.405185,121.307754,1974.1],[24.405268,121.30791,1968.8],[24.405381,121.308074,1968.3],[24.405382,121.308186,1967.3],[24.405485,121.308614,1951.1],[24.40557,121.308758,1955.1],[24.405667,121.308755,1955.3],[24.405757,121.308778,1961.6],[24.405926,121.3088,1964.0],[24.406204,121.308926,1966.5],[24.40631,121.309007,1970.9],[24.406507,121.309047,1974.0],[24.40658,121.309097,1972.1],[24.406683,121.309213,1975.3],[24.406772,121.309257,1972.4],[24.406953,121.309412,1973.0],[24.406962,121.309501,1979.2],[24.406937,121.309421,1974.6],[24.406872,121.309573,1974.8],[24.406864,121.309657,1978.5],[24.406901,121.309748,1978.8],[24.406958,121.309797,1982.0],[24.40703,121.309829,1980.7],[24.407104,121.309791,1986.5],[24.407197,121.309725,1985.8],[24.407279,121.309755,1988.3],[24.407205,121.309769,1990.0],[24.407354,121.309738,1985.2],[24.407421,121.309643,1986.9],[24.407493,121.309574,1985.2],[24.407501,121.30949,1986.2],[24.407507,121.309569,1984.4],[24.407575,121.309656,1991.5],[24.407599,121.309733,1990.9],[24.407642,121.309808,1983.5],[24.4077,121.309978,1992.4],[24.407788,121.310013,1988.8],[24.407823,121.310106,1993.2],[24.407892,121.310148,2001.4],[24.407962,121.310188,1999.5],[24.407945,121.310289,2001.4],[24.4081,121.310413,2003.9],[24.408215,121.310407,2006.5],[24.408345,121.310299,2017.2],[24.408425,121.310377,2019.5],[24.408488,121.31042,2028.1],[24.40859,121.310464,2032.1],[24.408664,121.310451,2040.3],[24.40864,121.310362,2039.9],[24.408638,121.310442,2037.2],[24.408706,121.310404,2033.3],[24.408761,121.310465,2041.3],[24.408699,121.310382,2043.4],[24.408619,121.31039,2038.7],[24.408658,121.310494,2039.3],[24.408699,121.310393,2035.8],[24.408717,121.310485,2040.4],[24.408783,121.310451,2047.0],[24.408866,121.310503,2048.3],[24.408938,121.310541,2041.6],[24.408939,121.310623,2052.8],[24.409027,121.310682,2055.3],[24.409101,121.310596,2068.5],[24.409166,121.310544,2070.2],[24.409083,121.310697,2074.4],[24.409097,121.310775,2079.3],[24.40918,121.310811,2080.9],[24.409246,121.310733,2083.4],[24.409313,121.310695,2080.4],[24.409254,121.310757,2097.9],[24.409328,121.3107,2093.2],[24.409313,121.310785,2098.7],[24.409392,121.310819,2095.3],[24.409449,121.310743,2100.4],[24.409371,121.310812,2113.3],[24.409384,121.310914,2117.2],[24.409363,121.31099,2110.5],[24.40938,121.311089,2115.7],[24.409323,121.311146,2116.1],[24.409284,121.311233,2113.8],[24.409247,121.311328,2116.6],[24.4093,121.311382,2119.3],[24.409339,121.311314,2120.1],[24.409434,121.311349,2120.1],[24.409451,121.311521,2135.7],[24.409493,121.311446,2137.8],[24.409461,121.311368,2143.3],[24.40952,121.311434,2143.9],[24.409506,121.311521,2137.5],[24.409581,121.311509,2143.8],[24.409675,121.311519,2146.0],[24.4096,121.311551,2149.8],[24.409666,121.311583,2149.6],[24.409741,121.311522,2151.5],[24.409761,121.311615,2157.6],[24.409832,121.311569,2163.2],[24.409892,121.31152,2162.5],[24.409949,121.311569,2165.6],[24.410046,121.311445,2173.1],[24.410072,121.311534,2176.0],[24.410168,121.311364,2180.1],[24.410238,121.311438,2183.7],[24.410279,121.311332,2187.9],[24.410183,121.311303,2190.6],[24.410274,121.311319,2185.7],[24.410355,121.311331,2188.5],[24.410411,121.311259,2198.4],[24.410493,121.311243,2202.0],[24.410534,121.311161,2203.5],[24.4106,121.311231,2201.0],[24.410628,121.311155,2216.1],[24.410683,121.311209,2213.3],[24.410704,121.311115,2216.0],[24.410773,121.311157,2217.8],[24.410827,121.311088,2223.3],[24.410882,121.311141,2225.7],[24.410937,121.311062,2225.8],[24.411002,121.311123,2236.2],[24.411049,121.311052,2238.7],[24.411134,121.311099,2239.6],[24.411275,121.311049,2248.4],[24.411367,121.311028,2260.2],[24.411421,121.310965,2264.2],[24.411485,121.311011,2260.7],[24.411571,121.310876,2271.5],[24.411656,121.310932,2275.3],[24.411728,121.310769,2287.5],[24.411806,121.310807,2294.6],[24.411839,121.310707,2296.6],[24.411984,121.310594,2307.0],[24.411941,121.310527,2309.3],[24.412022,121.310546,2308.5],[24.412087,121.310507,2311.1],[24.412082,121.31041,2311.4],[24.412139,121.310354,2316.7],[24.412224,121.310345,2317.8],[24.412397,121.31015,2325.9],[24.412421,121.31006,2335.1],[24.412497,121.310074,2337.6],[24.412603,121.309858,2350.7],[24.412626,121.309934,2353.8],[24.412697,121.309792,2358.9],[24.412754,121.309732,2365.9],[24.412813,121.309805,2371.4],[24.413105,121.309463,2388.4],[24.413182,121.309457,2396.3],[24.413256,121.309295,2404.1],[24.413487,121.309083,2426.9],[24.413565,121.30908,2427.8],[24.413572,121.308993,2432.8],[24.41365,121.309028,2438.3],[24.413799,121.308832,2453.7],[24.413959,121.308805,2466.0],[24.414041,121.308799,2477.9],[24.414118,121.308656,2483.3],[24.414173,121.308598,2483.4],[24.414248,121.30857,2492.7],[24.414342,121.308596,2495.6],[24.414564,121.308516,2506.7],[24.414598,121.308431,2515.7],[24.414681,121.308404,2523.9],[24.4148,121.308279,2531.1],[24.414878,121.308299,2535.1],[24.414911,121.308218,2538.7],[24.41499,121.308256,2536.5],[24.414912,121.308233,2537.0],[24.415291,121.308038,2559.5],[24.415363,121.30789,2560.4],[24.415443,121.30786,2568.9],[24.415706,121.307655,2581.2],[24.415707,121.307562,2580.3],[24.415847,121.307529,2590.6],[24.416006,121.307341,2600.2],[24.416088,121.307304,2601.5],[24.416273,121.307305,2609.7],[24.416566,121.307201,2617.9],[24.416697,121.307109,2628.1],[24.416639,121.307044,2628.3],[24.416709,121.307079,2621.8],[24.416869,121.307047,2631.1],[24.416938,121.30707,2630.4],[24.417014,121.307079,2635.2],[24.417323,121.307001,2645.2],[24.417537,121.306946,2655.5],[24.417605,121.306979,2654.7],[24.417676,121.306931,2654.6],[24.417807,121.307038,2659.5],[24.417956,121.307099,2668.0],[24.418029,121.307097,2667.5],[24.418268,121.307171,2674.7],[24.418363,121.307183,2673.3],[24.418425,121.307108,2675.0],[24.418505,121.307096,2681.5],[24.418575,121.307055,2677.7],[24.418711,121.306988,2685.4],[24.418771,121.306926,2685.9],[24.418821,121.306846,2692.4],[24.418868,121.306778,2693.0],[24.419077,121.306658,2700.4],[24.419173,121.306664,2700.8],[24.419327,121.306623,2705.3],[24.419531,121.30652,2705.0],[24.419695,121.306553,2705.6],[24.419627,121.306523,2707.5],[24.419699,121.306539,2704.6],[24.419626,121.306564,2709.1],[24.419698,121.306516,2707.8],[24.41962,121.306494,2709.2],[24.419684,121.306457,2707.0],[24.419652,121.30653,2707.8],[24.419719,121.306497,2707.1],[24.41963,121.306494,2705.3],[24.419672,121.306425,2703.5],[24.419694,121.306339,2705.4],[24.419745,121.306235,2704.3],[24.419792,121.306158,2710.3],[24.419847,121.30595,2706.6],[24.419878,121.305871,2712.2],[24.419942,121.305724,2714.4],[24.419946,121.305637,2717.7],[24.420048,121.305567,2716.4],[24.420115,121.305513,2718.6],[24.420353,121.30541,2731.3],[24.420558,121.305275,2735.5],[24.420758,121.30543,2736.6],[24.420831,121.305418,2736.8],[24.420897,121.305339,2734.9],[24.420992,121.305391,2736.4],[24.421024,121.305466,2735.5],[24.421169,121.305406,2742.6],[24.421249,121.30543,2751.8],[24.421332,121.305383,2752.2],[24.421404,121.305405,2760.3],[24.421572,121.30539,2765.9],[24.42166,121.30537,2765.2],[24.421799,121.305255,2772.6],[24.421967,121.305269,2777.2],[24.422041,121.305279,2788.2],[24.422126,121.305306,2791.2],[24.422209,121.305331,2789.9],[24.42225,121.305401,2792.7],[24.422338,121.305388,2794.6],[24.422341,121.305265,2795.9],[24.422353,121.305064,2804.1],[24.42232,121.304892,2804.5],[24.422369,121.304694,2802.6],[24.42242,121.30478,2806.9],[24.422482,121.304727,2812.5],[24.422512,121.304811,2813.2],[24.422574,121.304748,2820.9],[24.422595,121.304827,2820.4],[24.422676,121.304792,2827.2],[24.422738,121.304865,2830.3],[24.422812,121.304817,2835.9],[24.42282,121.304912,2837.4],[24.4229,121.30494,2838.7],[24.42295,121.304882,2840.8],[24.423055,121.304997,2852.7],[24.423292,121.305027,2852.1],[24.423391,121.305015,2857.6],[24.423464,121.304974,2855.3],[24.423539,121.304962,2861.4],[24.423609,121.304934,2862.2],[24.42364,121.304861,2866.4],[24.423955,121.304919,2881.0],[24.424126,121.304904,2886.3],[24.424188,121.304855,2880.5],[24.424254,121.304808,2892.3],[24.424254,121.304703,2897.1],[24.424308,121.304636,2895.3],[24.424378,121.304589,2904.5],[24.424369,121.304509,2905.4],[24.424461,121.304501,2901.7],[24.424679,121.304541,2924.9],[24.42474,121.30448,2922.8],[24.42487,121.304365,2924.4],[24.424935,121.304327,2930.3],[24.424929,121.304411,2928.4],[24.425068,121.304498,2938.2],[24.425422,121.304362,2964.9],[24.425499,121.304318,2965.9],[24.425843,121.30387,3003.6],[24.425909,121.303835,3005.5],[24.425977,121.303792,3003.1],[24.426113,121.303723,3010.5],[24.426273,121.303739,3014.5],[24.426417,121.303783,3022.6],[24.426499,121.303742,3017.6],[24.426635,121.30366,3033.0],[24.426723,121.303527,3032.5],[24.426756,121.303336,3046.4],[24.427059,121.303352,3060.0],[24.427218,121.303397,3073.6],[24.427267,121.303488,3084.0],[24.427418,121.303561,3084.3],[24.4275,121.303563,3088.3],[24.427546,121.303721,3097.6],[24.427621,121.303726,3095.8],[24.427769,121.303695,3114.1],[24.427756,121.303777,3106.3],[24.427839,121.303807,3118.6],[24.427903,121.303754,3131.5],[24.427987,121.303734,3127.2],[24.428062,121.303682,3132.7],[24.428047,121.303595,3134.7],[24.428167,121.303707,3142.6],[24.428244,121.303727,3141.5],[24.428216,121.303811,3142.8],[24.428283,121.303845,3146.8],[24.428267,121.303931,3155.3],[24.428259,121.304011,3156.2],[24.428316,121.304069,3142.3],[24.428604,121.304059,3179.8],[24.428676,121.304078,3180.3],[24.428733,121.304131,3183.6],[24.428845,121.30399,3190.2],[24.428854,121.304076,3187.8],[24.428949,121.304085,3197.1],[24.429011,121.304038,3199.9],[24.429014,121.304122,3198.0],[24.429138,121.30401,3210.2],[24.429158,121.304173,3210.1],[24.42923,121.304125,3220.1],[24.429386,121.304135,3217.9],[24.429472,121.304153,3222.8],[24.429785,121.304223,3232.7],[24.429889,121.30424,3233.8],[24.429962,121.304244,3239.0],[24.430036,121.30426,3236.3],[24.430108,121.304266,3237.5],[24.43021,121.30432,3236.4],[24.43033,121.304425,3236.6],[24.43039,121.304474,3240.9],[24.430449,121.304528,3238.5],[24.430487,121.304685,3246.2],[24.430523,121.304767,3246.7],[24.430576,121.304826,3253.5],[24.430647,121.304881,3253.1],[24.430745,121.304909,3250.3],[24.43112,121.304944,3256.9],[24.431213,121.30494,3260.4],[24.431287,121.304954,3258.4],[24.431352,121.304906,3258.4],[24.431599,121.304862,3270.2],[24.431671,121.304865,3270.3],[24.431743,121.304878,3275.5],[24.431892,121.304871,3277.5],[24.432047,121.304828,3288.5],[24.432122,121.304825,3288.0],[24.432607,121.304921,3314.0],[24.432724,121.304843,3313.1]],"wpts":[{"lat":24.397564,"lon":121.307019,"name":"武陵山莊","nameEn":"Wuling Villa"},{"lat":24.407088,"lon":121.309802,"name":"木橋","nameEn":"Footbridge"},{"lat":24.419688,"lon":121.306513,"name":"黑水塘","nameEn":"Black Water Pond"},{"lat":24.421031,"lon":121.30543,"name":"停機坪","nameEn":"Helipad"},{"lat":24.432722,"lon":121.304846,"name":"桃山","nameEn":"Tao Mountain"}]},{"name":"戒茂斯→溪邊營地","nameEn":"Jiemaosi → Xinwulu Creek Campsite","pts":[[23.227269,121.007899,1909.2],[23.227445,121.008092,1933.1],[23.227537,121.008026,1935.5],[23.227654,121.007985,1937.6],[23.227733,121.008017,1942.2],[23.227839,121.008139,1952.8],[23.228163,121.008304,1974.1],[23.228354,121.008279,1980.7],[23.228433,121.008247,1981.8],[23.22858,121.00827,1989.8],[23.228764,121.008391,2008.9],[23.228911,121.008428,2017.0],[23.229054,121.008419,2021.7],[23.229163,121.008487,2029.8],[23.229239,121.008519,2033.8],[23.229353,121.008606,2042.5],[23.229584,121.008757,2055.6],[23.229676,121.008899,2064.7],[23.229725,121.008926,2067.3],[23.229807,121.008921,2068.9],[23.229953,121.0089,2069.1],[23.230036,121.008904,2069.5],[23.230132,121.008862,2068.8],[23.230272,121.008883,2069.0],[23.23032,121.008855,2069.5],[23.230468,121.00889,2069.9],[23.230594,121.008869,2070.2],[23.230689,121.008821,2070.6],[23.23074,121.008817,2070.0],[23.230948,121.008622,2071.4],[23.231193,121.00857,2071.7],[23.231273,121.008563,2073.4],[23.231553,121.008625,2079.8],[23.232137,121.008499,2078.5],[23.232688,121.008633,2086.0],[23.23328,121.008504,2084.4],[23.233654,121.008482,2091.5],[23.234116,121.008173,2092.2],[23.234167,121.008161,2093.8],[23.234196,121.008196,2098.4],[23.234207,121.008268,2104.8],[23.234244,121.008329,2110.8],[23.23431,121.008361,2116.8],[23.234415,121.00838,2124.4],[23.234527,121.00842,2131.1],[23.234699,121.008547,2141.8],[23.234899,121.008507,2146.1],[23.235043,121.008421,2146.8],[23.235288,121.00825,2147.7],[23.235444,121.008194,2148.5],[23.235563,121.008206,2150.2],[23.236147,121.008044,2154.3],[23.236553,121.007774,2159.6],[23.236839,121.007247,2168.7],[23.236928,121.007146,2166.5],[23.236996,121.007085,2165.3],[23.237472,121.007303,2201.3],[23.237962,121.007374,2239.3],[23.238297,121.007411,2254.1],[23.238772,121.007577,2276.5],[23.239017,121.007763,2292.5],[23.239129,121.00787,2304.4],[23.239123,121.00807,2306.2],[23.239147,121.00814,2310.2],[23.239237,121.008189,2320.9],[23.239314,121.008182,2329.6],[23.23939,121.008125,2337.6],[23.239558,121.008103,2349.2],[23.239878,121.00795,2356.3],[23.24024,121.007876,2360.1],[23.24043,121.007956,2369.8],[23.240583,121.008036,2381.1],[23.240795,121.008245,2394.1],[23.24118,121.008245,2413.1],[23.241543,121.008159,2429.4],[23.241826,121.008258,2447.3],[23.242132,121.008184,2464.7],[23.242483,121.008295,2487.4],[23.243061,121.007682,2472.0],[23.243249,121.007461,2464.5],[23.243521,121.007378,2457.7],[23.243676,121.007321,2454.4],[23.243827,121.007227,2454.1],[23.244099,121.007156,2449.5],[23.244478,121.00694,2438.1],[23.244721,121.006744,2430.1],[23.245095,121.006696,2423.7],[23.245334,121.006631,2423.3],[23.245603,121.006696,2417.4],[23.24569,121.00666,2414.6],[23.245835,121.006372,2414.2],[23.245903,121.006251,2413.7],[23.2462,121.006159,2409.4],[23.246386,121.006241,2403.6],[23.246427,121.006393,2396.0],[23.246464,121.006465,2392.1],[23.246873,121.006561,2382.3],[23.246972,121.006526,2382.7],[23.247111,121.006523,2381.1],[23.24747,121.006631,2371.9],[23.247799,121.006809,2362.8],[23.24808,121.007026,2353.6],[23.24856,121.007235,2342.1],[23.248724,121.007315,2337.9],[23.248815,121.007432,2334.6],[23.248843,121.007527,2331.8],[23.248801,121.007793,2323.7],[23.248529,121.008125,2312.0],[23.248513,121.008355,2298.6],[23.248535,121.008569,2288.1],[23.248609,121.008804,2279.5],[23.248897,121.00899,2268.9],[23.249021,121.009044,2265.1],[23.249066,121.009177,2259.8],[23.249076,121.009338,2254.6],[23.249184,121.009575,2244.1],[23.249188,121.0098,2235.4],[23.249205,121.009996,2226.6],[23.249324,121.010133,2219.0],[23.249469,121.010275,2215.4],[23.249537,121.010341,2216.6],[23.24945,121.010598,2215],[23.249385,121.010616,2212.8],[23.24932,121.010659,2211.6],[23.248901,121.010835,2203.2],[23.248724,121.010965,2201.2],[23.248484,121.011076,2194.6],[23.248362,121.011141,2192.7],[23.248322,121.011168,2192.9],[23.24775,121.010968,2188.5],[23.247728,121.010964,2188.4]],"wpts":[{"lat":23.247728,"lon":121.010964,"name":"溪邊營地","nameEn":"Xinwulu Creek Campsite"}]},{"name":"四季林道 10/20","nameEn":"Siji Forest Road, Oct. 20","pts":[[24.487663,121.430438,882.6],[24.488022,121.430902,893.4],[24.488197,121.431035,898],[24.48827,121.43106,899.8],[24.488514,121.430932,901.2],[24.488618,121.430962,901.6],[24.488844,121.4313,904],[24.488947,121.43167,909.2],[24.488809,121.431778,912.2],[24.488294,121.431828,919.2],[24.488111,121.432017,921.6],[24.487841,121.432152,925.2],[24.487493,121.432238,930.6],[24.486885,121.432117,941.2],[24.486738,121.432231,944.2],[24.487046,121.432834,954.2],[24.487104,121.433216,960.8],[24.487182,121.433293,963],[24.487765,121.433311,968.8],[24.488222,121.43324,972.4],[24.488317,121.433292,973.4],[24.488278,121.433363,974],[24.488004,121.433399,977.8],[24.487864,121.43348,978.8],[24.487464,121.433582,984],[24.487069,121.433784,991.8],[24.486931,121.433991,999.2],[24.486838,121.434237,1004.8],[24.486894,121.434606,1011.4],[24.486721,121.434895,1015.8],[24.48655,121.435051,1019],[24.486474,121.435212,1023.2],[24.486708,121.435475,1031.6],[24.487107,121.43567,1042.8],[24.487294,121.43583,1048.6],[24.487367,121.435821,1046.2],[24.487596,121.435695,1051.8],[24.487695,121.43554,1055.8],[24.487608,121.434895,1070],[24.487691,121.434613,1074.8],[24.487794,121.434556,1076.6],[24.487881,121.434708,1080.6],[24.487877,121.434893,1085],[24.488257,121.435431,1099],[24.488251,121.43586,1106],[24.488674,121.436194,1116.2],[24.488883,121.436632,1122.6],[24.488791,121.437062,1127.8],[24.488624,121.437514,1136.2],[24.488551,121.437677,1139.2],[24.488413,121.437754,1141.8],[24.488227,121.437709,1143.8],[24.488106,121.43753,1147.2],[24.487839,121.43743,1152.4],[24.487579,121.437418,1155.8],[24.487418,121.4375,1158.4],[24.487175,121.437438,1162.2],[24.486705,121.437504,1167.4],[24.486215,121.43734,1174],[24.48591,121.437363,1181.2],[24.485638,121.4378,1194.8],[24.485395,121.438404,1208.4],[24.485326,121.438992,1220],[24.485393,121.439137,1223.6],[24.485393,121.439512,1231],[24.484946,121.439983,1243.2],[24.484761,121.440321,1252.2],[24.484636,121.440424,1256.4],[24.484501,121.440695,1261.8],[24.484225,121.440783,1265.6],[24.484319,121.440695,1267.2],[24.484236,121.440848,1266.6],[24.484338,121.440711,1264.8],[24.484263,121.440778,1263.8],[24.484246,121.440867,1264.2],[24.484181,121.44083,1262.8],[24.484246,121.44087,1260.8],[24.48429,121.440738,1260.4],[24.484391,121.440715,1259.6],[24.484534,121.440592,1256.2],[24.484458,121.440682,1262.8],[24.484369,121.440733,1265],[24.484237,121.440862,1265.6],[24.484268,121.440776,1261.8],[24.484278,121.440884,1263.4],[24.484205,121.440869,1262],[24.4843,121.440991,1262.6],[24.484593,121.441292,1272.2],[24.484779,121.441515,1275.4],[24.485024,121.441572,1280.2],[24.4854,121.441535,1287],[24.485827,121.441663,1296.6],[24.486168,121.441665,1306.6],[24.486548,121.441791,1315],[24.486629,121.441931,1319.4],[24.486691,121.442238,1324.6],[24.486788,121.442379,1327],[24.487021,121.442891,1339.8],[24.487529,121.443456,1357],[24.487716,121.443923,1366],[24.487641,121.44438,1375.6],[24.48768,121.444481,1377.8],[24.488252,121.444907,1393.6],[24.488363,121.445049,1397.8],[24.488307,121.445452,1405.8],[24.488356,121.4458,1411],[24.488416,121.446,1413.6],[24.48864,121.446422,1417.2],[24.488574,121.446483,1418.8],[24.488667,121.446469,1419],[24.488692,121.446669,1422.4],[24.488584,121.447152,1428],[24.488403,121.447492,1435.4],[24.48846,121.447679,1441],[24.48873,121.44791,1450],[24.488794,121.447955,1456.2],[24.488451,121.448682,1470.6],[24.488437,121.448876,1472],[24.488448,121.449254,1481.6],[24.488609,121.449367,1486.8],[24.488465,121.449546,1491.8],[24.488649,121.44956,1496],[24.488748,121.449534,1498],[24.488783,121.449445,1501.4],[24.488848,121.449007,1505.2],[24.488994,121.448936,1507],[24.489082,121.449092,1509],[24.489069,121.44931,1513],[24.489154,121.449486,1515.4],[24.489156,121.449668,1518.2],[24.488948,121.449978,1522.4],[24.488841,121.449851,1524],[24.488901,121.449927,1524],[24.489015,121.449801,1522.2],[24.48898,121.449918,1522.4],[24.48891,121.449897,1523.4],[24.488844,121.449981,1523.6],[24.488902,121.449908,1523.8],[24.48883,121.449935,1523.2],[24.488894,121.449972,1524.4],[24.488908,121.449877,1524.8],[24.488826,121.45001,1524],[24.488763,121.449955,1524.2],[24.488562,121.450209,1525.8],[24.488505,121.450357,1529.6],[24.488263,121.450626,1538.4],[24.488173,121.450961,1544.8],[24.48792,121.451434,1551],[24.487854,121.451727,1555],[24.487904,121.452046,1559],[24.487751,121.45255,1565.6],[24.487601,121.452607,1567.8],[24.487414,121.452353,1571.8],[24.487209,121.452477,1576.8],[24.487223,121.452647,1581.2],[24.487199,121.452781,1582.2],[24.487053,121.452838,1583.2],[24.486725,121.452865,1589.8],[24.486699,121.452941,1592],[24.486671,121.453355,1596.6],[24.48659,121.453575,1598.8],[24.486459,121.453842,1601.6],[24.486091,121.454192,1607.2],[24.485939,121.454526,1612.8],[24.486069,121.454766,1616],[24.486059,121.454866,1616.8],[24.485689,121.455125,1620.2],[24.485523,121.455097,1620.4],[24.485109,121.455237,1621.6],[24.484817,121.455186,1621.4],[24.484727,121.455232,1621.2],[24.484679,121.455457,1621.4],[24.484319,121.455591,1623.6],[24.48427,121.455672,1624.4],[24.484297,121.455914,1627.2],[24.484231,121.456241,1628.2],[24.484019,121.4563,1629.4],[24.48362,121.456274,1630.8],[24.48311,121.456411,1632.4],[24.483038,121.456489,1633],[24.48301,121.456824,1635],[24.482896,121.457035,1636.8],[24.482621,121.457021,1639.8],[24.482653,121.456948,1640.8],[24.482572,121.457202,1643.6],[24.48242,121.457406,1646.6],[24.48195,121.457401,1653.4],[24.481909,121.457494,1655.6],[24.482057,121.457914,1658.8],[24.481942,121.45831,1661.8],[24.482039,121.458756,1665.8],[24.481921,121.458888,1666.4],[24.481487,121.458984,1673],[24.481196,121.459085,1674.8],[24.480746,121.459102,1678.2],[24.48022,121.459189,1687.4],[24.480178,121.45912,1688.6],[24.480121,121.459195,1688.8],[24.480194,121.459212,1689],[24.480129,121.45925,1690.2],[24.479753,121.459208,1694.6],[24.479728,121.459123,1696.4],[24.479762,121.459215,1696.4],[24.47969,121.45923,1697.8],[24.479623,121.459491,1702.4],[24.479553,121.459514,1703.2],[24.479625,121.45945,1703.6],[24.479548,121.45944,1703.8],[24.479604,121.459597,1703.6],[24.479576,121.459437,1704.6],[24.479603,121.459514,1704.6],[24.47957,121.459942,1710.6],[24.479324,121.460202,1715],[24.479048,121.460205,1717.6],[24.478439,121.460243,1715.6],[24.477887,121.460589,1713],[24.477449,121.461087,1711.4],[24.477256,121.46127,1708.8],[24.477153,121.461554,1707],[24.477154,121.461791,1705.6],[24.476786,121.461892,1703.4],[24.47664,121.462061,1703.6],[24.47661,121.462253,1703.2],[24.476639,121.462339,1704.2],[24.476734,121.462521,1702.6],[24.476817,121.462726,1705.8],[24.476911,121.463003,1699.4],[24.476907,121.46311,1701.2],[24.476957,121.463264,1698.4],[24.47689,121.463479,1698.2],[24.476905,121.463611,1697.4],[24.476974,121.463671,1698.6],[24.476965,121.463892,1697.8],[24.476794,121.46438,1693.2],[24.476708,121.464854,1691.2],[24.476613,121.465016,1691.8],[24.476646,121.465184,1689.4],[24.476644,121.465296,1689.8],[24.476674,121.465368,1686.8],[24.476754,121.465353,1691.2],[24.47683,121.465347,1690.4],[24.476746,121.465321,1690.6],[24.476891,121.465305,1690.4],[24.477093,121.464906,1692.6],[24.477175,121.464868,1693],[24.477348,121.464874,1693],[24.477597,121.464983,1697.2],[24.477776,121.464892,1700.4],[24.477848,121.464914,1701.6],[24.47786,121.464831,1702],[24.478185,121.464834,1703.6],[24.478266,121.46482,1705.4],[24.478135,121.464597,1706.8],[24.478208,121.464295,1707.4],[24.478144,121.46408,1707.8],[24.478222,121.463845,1708.8],[24.478215,121.463604,1709.8],[24.47843,121.463451,1710.6],[24.478715,121.463512,1712],[24.478644,121.46354,1711.8],[24.478716,121.463573,1711.4],[24.478664,121.463516,1710.8],[24.478701,121.463486,1710.8]],"wpts":[{"lat":24.478701297193766,"lon":121.46348563022912,"name":"神木登山口","nameEn":"Gigantic Tree Trailhead"}]}]</script>
+<script>
+/* 路線剖面比較 © 2026 shainyhsu. All rights reserved. 未經作者書面同意，不得重製、改作或散布本網站的程式碼與內容，也不得放進任何商業產品、服務或網站。 */
+(function () {
+  'use strict';
+  var VERSION = 'V1';
+
+  // ================= i18n: Chinese in the page, English from this table =================
+  var EN = {   // American English; place names follow official or established English names
+    '路線剖面比較': 'Multi-Route Profile Comparison',
+    '路線剖面比較｜GPX 登山路線高度剖面比較圖（A4 直式／橫式 JPG）': 'Multi-Route Profile Comparison — compare hiking route elevation profiles (A4 portrait or landscape JPG)',
+    '說明': 'Notes',
+    '把幾條登山路線的距離與高度剖面放在同一張圖比較。第一條是主路線，依坡度分色；其他路線從同一個起點畫起，線尾標終點名稱與實際海拔。': 'Compare the distance–elevation profiles of several hiking routes on one chart. The first route is the main route, shaded by grade; every other route starts from the same point and is labeled at its end with the place name and actual elevation.',
+    '圖卡含 1:1 實際比例剖面、高度剖面、圖例、坡度帶與坡度分級表，存成 A4 直式或橫式 JPG（300 dpi，直式 2,480 × 3,508 px）；路線多時自動分成多頁。': 'The card includes a true-scale (1:1) profile, the elevation profile, a legend, grade bands and a grade table, and saves as A4 portrait or landscape JPG pages (300 dpi; portrait is 2,480 × 3,508 px). With many routes, it continues onto additional pages.',
+    '檔案只在你的瀏覽器裡處理，不會上傳。GPX 缺高度時，才會下載路線附近的內政部 20 m 地形圖磚來補。': 'Your files are processed in your browser and are never uploaded. Only when a GPX file is missing elevation data does the app download nearby tiles of Taiwan’s 20 m terrain model to fill the gaps.',
+    '路線': 'Routes',
+    '加入 GPX／KML 檔': 'Add GPX/KML files',
+    '載入範例': 'Load sample',
+    '全部移除': 'Remove all',
+    '也可以把檔案拖到這裡。第一條是主路線，最多 7 條（含主路線）。': 'You can also drag files here. The first route is the main route; up to 7 routes in total.',
+    '圖卡設定': 'Card settings',
+    '標題': 'Title',
+    '副標（選填）': 'Subtitle (optional)',
+    '例如：2026-11-15 單攻、紀錄來源': 'e.g., Nov. 15, 2026 day hike; track source',
+    '備註（選填，放在圖卡最下面）': 'Notes (optional, printed at the end of the card)',
+    '圖片方向': 'Orientation',
+    '直式': 'Portrait',
+    '橫式': 'Landscape',
+    'A4、300 dpi，四邊留 10 mm 列印邊界；內容多時分成多頁。': 'A4 at 300 dpi with 10 mm print margins; longer content continues onto additional pages.',
+    '縱軸是相對起點的高度：每條線都從 0 km、0 m 起算，比的是陡度與長度；地名旁的數字是實際海拔。': 'The vertical axis shows elevation relative to the start: every line begins at 0 km and 0 m, so the chart compares steepness and length. The numbers next to place names are actual elevations.',
+    '高度直接用 GPX 的紀錄；GPX 缺高度的點，才用內政部 20 m 數值地形模型（台灣）補上，兩者的差異不計。': 'Elevations come directly from each GPX file. Points without elevation data are filled in from the Ministry of the Interior’s 20 m digital terrain model (Taiwan only); the small difference between the two is ignored.',
+    '線色用高反差色盤，每條比較線另配不同線型，黑白雷射印表機印出來也分得開；淺色線加深色外框，線經過坡度色帶時加白邊。': 'Lines use a high-contrast color palette, and each comparison line also has its own dash pattern, so the lines stay distinguishable on a black-and-white laser printer. Light colors get a dark outline, and lines get a white edge where they cross the grade bands.',
+    '實走紀錄（有時間戳記）會先去除停留時的 GPS 漂移：點與點至少相距 8 m。每條路線的「調整」可以選一段、反轉方向、依里程樁的實際距離等比例校正、改名稱與簡稱、換線色與線型、標揹負、寫備註，也能選要標在圖上的點。': 'Recorded tracks (with timestamps) first have GPS drift removed from stops, keeping points at least 8 m apart. Under “Adjust,” you can trim each route to a section, reverse it, scale it to the distance posted on trail signs, rename it and give it a short name, change its line color and style, set its pack load, add notes, and choose which points appear on the card.',
+    '標了揹負（重裝／輕裝）的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」；勾「列入坡度分級表」的路線列在表中，預設是主路線與實走紀錄。坡度每 100 m 一格；最陡的 300 m／1 km＝任一連續 300 m／1 km 的淨升換算成坡度。': 'A route with a pack load (full pack or daypack) gets a span arrow above the profile and a row under “Grade bands & pack load.” Routes checked “Include in grade table” appear in the table; by default, these are the main route and recorded tracks. Grade is measured over each 100 m; the steepest 300 m or 1 km is the largest net gain over any continuous 300 m or 1 km, expressed as a grade.',
+    '地形資料：內政部 20 公尺網格數值地形模型資料；圖磚由 OsmHackTW terrain-rgb 於 2023 年轉製。此開放資料依政府資料開放授權條款（Open Government Data License）進行公眾釋出，使用者於遵守本條款各項規定之前提下，得利用之。政府資料開放授權條款：': 'Terrain data: Ministry of the Interior 20 m grid digital terrain model; tiles converted by OsmHackTW terrain-rgb in 2023. This open data is released to the public under the Open Government Data License; users may use it in compliance with the terms of that license. Open Government Data License: ',
+    '預覽': 'Preview',
+    '加入 GPX 後，這裡會出現圖卡。': 'Add a GPX file to see the card here.',
+    '下載 JPG': 'Download JPG',
+    '分享圖片': 'Share',
+    '© 2026 shainyhsu｜路線剖面比較': '© 2026 shainyhsu | Multi-Route Profile Comparison',
+    '歡迎使用；未經作者書面同意，不得重製、改作或散布本網站的程式碼與內容，也不得放進任何商業產品、服務或網站。': 'You are welcome to use this tool. Without the author’s written consent, the code and content of this site may not be copied, adapted or distributed, or included in any commercial product, service or website.',
+    // route list
+    '主路線': 'Main route', '設為主路線': 'Set as main route', '移除這條路線': 'Remove this route', '路線名稱': 'Route name',
+    '調整：範圍、名稱、線色、揹負、備註': 'Adjust: section, names, line, pack load, notes',
+    '範圍': 'Section', '從': 'from', '到': 'to', '或': 'or', '全段': 'Full track', 'GPX 全長 {0} km': 'GPX length: {0} km',
+    '反轉方向': 'Reverse direction', '去除停留時的 GPS 漂移（實走紀錄）': 'Remove GPS drift from stops (recorded track)',
+    '實際距離': 'Posted distance', '留白＝用 GPX 量的距離；填里程樁的距離就等比例校正': 'Leave blank to use the GPX distance, or enter the distance on trail signs to scale the route to it.',
+    '起點名稱': 'Start name', '終點名稱': 'End name', '線色': 'Line color', '圖上的點': 'Points shown on the card',
+    '簡稱（表格、坡度帶用）': 'Short name (for the table and grade bands)',
+    '線型': 'Line style', '自動': 'Auto', '實線': 'Solid', '虛線': 'Dashed', '長虛線': 'Long dash', '點線': 'Dotted', '點虛線': 'Dash-dot', '雙點虛線': 'Dash-dot-dot', '長點虛線': 'Long dash-dot', '短虛線': 'Short dash',
+    '揹負': 'Pack load', '不標示': 'None', '重裝': 'Full pack', '輕裝': 'Daypack', '例如：揹 13 kg': 'e.g., 13 kg pack',
+    '標了揹負的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」。': 'A route with a pack load gets a span arrow above the profile and a row under “Grade bands & pack load.”',
+    '列入坡度分級表': 'Include in grade table',
+    '勾選的點會標在比較線上，附實際海拔。': 'Checked points are marked on the comparison line with their actual elevation.',
+    '備註（放在圖例下方）': 'Notes (printed below the legend)',
+    '以「・」開頭的行是條列，其他行是小標題': 'Lines starting with “・” become bullet points; other lines become headings.',
+    '起點': 'Start', '終點': 'End', '最高點': 'High point', '實走紀錄': 'Recorded', '規劃路線': 'Planned', '距離校正': 'scaled to posted distance',
+    '黑': 'Black', '朱紅': 'Vermilion', '藍': 'Blue', '綠': 'Green', '洋紅': 'Magenta', '紫': 'Purple', '金黃': 'Gold',
+    '已被「{0}」使用': 'In use by “{0}”',
+    '最多 7 條路線（含主路線）；要比更多，請分成兩張圖。': 'Up to 7 routes, including the main route. To compare more, make a second card.',
+    '{0} 沒有加入：{1}': '{0} was not added: {1}',
+    '檔案不是有效的 GPX 或 KML。': 'This is not a valid GPX or KML file.',
+    '軌跡點太少，無法計算。': 'The track has too few points.',
+    'KMZ 需要連上網路才能解開。': 'Opening a KMZ file requires an internet connection.',
+    'KMZ 裡沒有 KML。': 'The KMZ file contains no KML.',
+    '這條路線沒有高度資料，這裡也讀不到 DTM，畫不出剖面。': 'This route has no elevation data, and the DTM doesn’t cover it, so no profile can be drawn.',
+    'GPX 高度': 'GPX elevations', 'DTM 高度': 'DTM elevations', 'DTM 補高度': 'DTM-filled',
+    '讀取 DTM 地形圖磚（{0} 張）…': 'Loading {0} DTM tiles…',
+    '{0} 的 GPX 缺高度，已用內政部 20 m DTM 補上。': '{0}: missing GPX elevations filled in from the 20 m DTM.',
+    '再按一次，取代目前的路線': 'Press again to replace the current routes',
+    '再按一次，移除全部路線': 'Press again to remove all routes',
+    'A4 直式・{0} 頁・{1} × {2} px・300 dpi': 'A4 portrait · {0} · {1} × {2} px · 300 dpi',
+    'A4 橫式・{0} 頁・{1} × {2} px・300 dpi': 'A4 landscape · {0} · {1} × {2} px · 300 dpi',
+    '下載 JPG（{0} 頁）': 'Download JPG ({0} pages)', '第 {0} 頁': 'Page {0}', '_第{0}頁': '_p{0}',
+    '產生圖片中…': 'Creating images…', '已存成「{0}」。': 'Saved as “{0}.”', '已存成 {0} 個檔案。': 'Saved {0} files.', '已取消下載。': 'Download canceled.',
+    '這個視窗不能下載。': 'Files can’t be saved from this view.', '已開啟分享。': 'Share sheet opened.',
+    '這個瀏覽器不能直接分享圖片，已改為下載。': 'This browser can’t share images directly, so they were downloaded instead.',
+    '範例：桃山和其他路線': 'Sample: Tao Mountain and other routes',
+    '範例資料取自步程試算的三個範例行程': 'Sample data from the three Hike Time Estimator examples',
+    // card
+    '{0} km・爬升 {1} m、下降 {2} m，海拔 {3} m': '{0} km · {1} m gain, {2} m loss · elevation {3} m',
+    '同比例：高度與距離 1:1': 'True scale (1:1)',
+    '不放大高度時，這段路真正的樣子': 'How the route actually looks, with no vertical exaggeration',
+    '灰色是{0}。': 'The gray area is {0}. ',
+    '其他線的起點都對齊{0}（0 km、{1} m），方便比較陡度與長度。': 'All other lines start from the same point as {0} (0 km, {1} m) to compare steepness and length.',
+    '高度剖面': 'Elevation profile',
+    '高度放大 {0} 倍，才看得出起伏': 'Vertical exaggeration ×{0}',
+    '相對起點的高度 (m)': 'Elevation relative to start (m)',
+    '縱軸是相對起點的高度：每條線都從 0 km、0 m 起算，看的是陡度與長度；地名旁的數字才是實際海拔。': 'The vertical axis shows elevation relative to the start: every line begins at 0 km and 0 m, so the chart compares steepness and length. The numbers next to place names are actual elevations. ',
+    '主線起點是{0} {1} m。': 'The main route starts at {0}, {1} m.',
+    '坡度帶與揹負': 'Grade bands & pack load', '每 100 m 一格，對齊上方剖面': 'Each cell is 100 m, aligned with the profile above',
+    '坡度分級與各級距離': 'Distance by grade', '（續）': ' (continued)', '依路線里程計算': 'Based on each route’s distance',
+    '分級': 'Class', '坡度': 'Grade',
+    '極陡下坡': 'Very steep downhill', '陡下坡': 'Steep downhill', '下坡': 'Downhill', '平緩': 'Flat', '一般上坡': 'Uphill', '陡上坡': 'Steep uphill', '極陡上坡': 'Very steep uphill',
+    '−20% 或更陡': '−20% or steeper', '−20 ~ −12%': '−20 to −12%', '−12 ~ −5%': '−12 to −5%', '−5 ~ +5%': '−5 to +5%', '+5 ~ +12%': '+5 to +12%', '+12 ~ +20%': '+12 to +20%', '+20% 或更陡': '+20% or steeper',
+    '坡度 20% 或更陡（上＋下）合計': 'Total at 20% or steeper (uphill + downhill)',
+    '{0} 是規劃路線：規劃路線常把之字形拉直，距離偏短、坡度偏陡。': '{0} is a planned route. Planned routes often cut across switchbacks, so they come out shorter and steeper.',
+    '各欄都是實走紀錄。': 'All columns are recorded tracks.',
+    '最陡的 300 m：{0}': 'Steepest 300 m: {0}', '；最陡的 1 km：{0}': '; steepest 1 km: {0}',
+    '資料：距離依各 GPX 量測（實走紀錄先去除停留時的 GPS 漂移）；高度用 GPX 的紀錄，GPX 缺高度的地方用內政部 20 m DTM 補上；每 20 m 一點、三點平均；坡度每 100 m 一格。': 'Data: distances measured along each GPX track (recorded tracks have GPS drift from stops removed); elevations from the GPX, with the Ministry of the Interior’s 20 m DTM filling in where the GPX has none; sampled every 20 m with a 3-point average; grade measured over each 100 m. ',
+    '{0} 依實際距離 {1} km 校正（GPX {2} km）': '{0} scaled to its posted distance of {1} km (GPX: {2} km)',
+    '{0} 的高度由 DTM 補上。': '{0}: elevations filled in from the DTM. ',
+    '路線剖面比較 © 2026 shainyhsu': 'Multi-Route Profile Comparison © 2026 shainyhsu',
+    '；': '; ', '。': '. ', '、': ', '
+  };
+  var LANG = (function () {
+    var nav = /^zh/i.test(navigator.language || '') ? 'zh' : 'en';
+    try { var v = localStorage.getItem('rpc.lang') || localStorage.getItem('ctp.lang'); return v === 'en' || v === 'zh' ? v : nav; } catch (e) { return nav; }
+  })();
+  function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function _t(s) { return LANG === 'en' && has(EN, s) ? EN[s] : s; }
+  function _f(s) { var a = arguments; return _t(s).replace(/\{(\d)\}/g, function (m, i) { var v = a[+i + 1]; return v === undefined ? m : String(v); }); }
+  var TITLE_ZH = document.title, NODES = [], ATTRS = [];
+  (function collect() {
+    var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n;
+    while ((n = w.nextNode())) {
+      var p = n.parentNode; if (!p) continue;
+      if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE' || p.nodeName === 'TEXTAREA') continue;
+      var key = n.nodeValue.trim();
+      if (key && has(EN, key)) NODES.push({ n: n, zh: n.nodeValue, key: key });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[placeholder],[aria-label],[title]'), function (el) {
+      ['placeholder', 'aria-label', 'title'].forEach(function (a) { var v = el.getAttribute(a); if (v && has(EN, v)) ATTRS.push({ el: el, a: a, zh: v }); });
+    });
+  })();
+  function applyLang() {
+    document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-Hant';
+    NODES.forEach(function (o) { o.n.nodeValue = LANG === 'en' ? o.zh.replace(o.key, EN[o.key]) : o.zh; });
+    ATTRS.forEach(function (o) { o.el.setAttribute(o.a, LANG === 'en' ? EN[o.zh] : o.zh); });
+    document.title = _t(TITLE_ZH);
+    var b = $('langBtn');
+    b.setAttribute('aria-label', LANG === 'en' ? '切換成中文' : 'Switch to English'); b.title = LANG === 'en' ? '中文' : 'English';
+  }
+
+  // ================= helpers =================
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function nf(v) { return (Math.round(v) || 0).toLocaleString('en-US'); }   // never “-0”
+  function km1(m) { return (Math.round(m / 100) / 10).toFixed(1); }
+  function km2(m) { return (Math.round(m / 10) / 100).toFixed(2); }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function num(s) { if (s === null || s === undefined) return null; var v = parseFloat(String(s).trim().replace(',', '.')); return isFinite(v) ? v : null; }
+  function hav(a, b, c, d) {
+    var r = Math.PI / 180, p1 = a * r, p2 = c * r, dp = p2 - p1, dl = (d - b) * r;
+    var h = Math.sin(dp / 2) * Math.sin(dp / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+    return 2 * 6371008.8 * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  function debounce(fn, ms) { var t = null; return function () { clearTimeout(t); t = setTimeout(fn, ms); }; }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+
+  // ================= parsing: GPX, KML, KMZ =================
+  function kids(el, name) { return el.getElementsByTagNameNS('*', name); }
+  function childText(el, name) { var c = kids(el, name); return c.length ? (c[0].textContent || '').trim() : ''; }
+  function parseXml(text) {
+    var doc = new DOMParser().parseFromString(text, 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) throw new Error(_t('檔案不是有效的 GPX 或 KML。'));
+    var root = doc.documentElement, rn = (root.localName || '').toLowerCase(), out = { name: '', pts: [], wpts: [] }, i, j;
+    if (rn === 'gpx') {
+      var trks = kids(root, 'trk');
+      if (trks.length) { for (i = 0; i < trks[0].childNodes.length; i++) { var cn = trks[0].childNodes[i]; if (cn.localName === 'name') { out.name = cn.textContent.trim(); break; } } }
+      if (!out.name) { var md = kids(root, 'metadata'); if (md.length) out.name = childText(md[0], 'name'); }
+      var tp = kids(root, 'trkpt'); if (!tp.length) tp = kids(root, 'rtept');
+      for (i = 0; i < tp.length; i++) {
+        var p = tp[i], la = num(p.getAttribute('lat')), lo = num(p.getAttribute('lon'));
+        if (la === null || lo === null) continue;
+        var t = Date.parse(childText(p, 'time'));
+        out.pts.push({ lat: la, lon: lo, ele: num(childText(p, 'ele')), t: isFinite(t) ? t : null });
+      }
+      var wp = kids(root, 'wpt');
+      for (i = 0; i < wp.length; i++) { var wl = num(wp[i].getAttribute('lat')), wo = num(wp[i].getAttribute('lon')); if (wl !== null && wo !== null) out.wpts.push({ lat: wl, lon: wo, name: childText(wp[i], 'name') }); }
+    } else if (rn === 'kml') {
+      var pms = kids(root, 'Placemark');
+      for (i = 0; i < pms.length; i++) {
+        var pm = pms[i], nm = childText(pm, 'name'), ls = kids(pm, 'LineString'), tr = kids(pm, 'Track'), pt = kids(pm, 'Point');
+        for (j = 0; j < ls.length; j++) {
+          childText(ls[j], 'coordinates').split(/\s+/).forEach(function (c) { var v = c.split(','); var lo2 = num(v[0]), la2 = num(v[1]); if (v.length >= 2 && lo2 !== null && la2 !== null) out.pts.push({ lat: la2, lon: lo2, ele: v.length > 2 ? num(v[2]) : null, t: null }); });
+          if (!out.name) out.name = nm;
+        }
+        for (j = 0; j < tr.length; j++) {
+          var cs = kids(tr[j], 'coord'), ws = kids(tr[j], 'when');
+          for (var q = 0; q < cs.length; q++) {
+            var v3 = cs[q].textContent.trim().split(/\s+/), lo3 = num(v3[0]), la3 = num(v3[1]); if (lo3 === null || la3 === null) continue;
+            var t3 = ws[q] ? Date.parse(ws[q].textContent.trim()) : NaN;
+            out.pts.push({ lat: la3, lon: lo3, ele: v3.length > 2 ? num(v3[2]) : null, t: isFinite(t3) ? t3 : null });
+          }
+          if (!out.name) out.name = nm;
+        }
+        if (pt.length && !ls.length && !tr.length) { var c4 = childText(pt[0], 'coordinates').split(','), lo4 = num(c4[0]), la4 = num(c4[1]); if (lo4 !== null && la4 !== null) out.wpts.push({ lat: la4, lon: lo4, name: nm }); }
+      }
+      if (!out.name) { var dn = kids(root, 'Document'); if (dn.length) out.name = childText(dn[0], 'name'); }
+    } else throw new Error(_t('檔案不是有效的 GPX 或 KML。'));
+    if (out.pts.length < 2) throw new Error(_t('軌跡點太少，無法計算。'));
+    return out;
+  }
+  var JSZIP_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', jszipP = null;
+  function loadJSZip() {
+    if (window.JSZip) return Promise.resolve(window.JSZip);
+    if (!jszipP) jszipP = new Promise(function (ok, no) {
+      var s = document.createElement('script'); s.src = JSZIP_URL; s.async = true;
+      s.onload = function () { window.JSZip ? ok(window.JSZip) : no(new Error(_t('KMZ 需要連上網路才能解開。'))); };
+      s.onerror = function () { jszipP = null; no(new Error(_t('KMZ 需要連上網路才能解開。'))); };
+      document.head.appendChild(s);
+    });
+    return jszipP;
+  }
+  function readFile(file) {
+    if (/\.kmz$/i.test(file.name || '')) {
+      return loadJSZip().then(function (Z) { return Z.loadAsync(file); }).then(function (z) {
+        var f = Object.keys(z.files).filter(function (k) { return /\.kml$/i.test(k); })[0];
+        if (!f) throw new Error(_t('KMZ 裡沒有 KML。'));
+        return z.files[f].async('string');
+      }).then(parseXml);
+    }
+    return file.text().then(parseXml);
+  }
+  function isRecorded(pts) {   // timestamps on most points, over 10+ min, sampled at least every 2 min
+    var t = [];
+    pts.forEach(function (p) { if (p.t !== null) t.push(p.t); });
+    if (t.length < 20 || t.length < pts.length * 0.8 || !(t[t.length - 1] - t[0] > 600000)) return false;
+    var d = [];
+    for (var i = 1; i < t.length; i++) d.push(t[i] - t[i - 1]);
+    d.sort(function (a, b) { return a - b; });
+    var med = d[d.length >> 1];
+    return med > 0 && med <= 120000;
+  }
+
+  // ================= DTM: MOI 20 m terrain as Terrain-RGB tiles (OsmHackTW), z13 =================
+  var DEM_URL = 'https://osmhacktw.github.io/terrain-rgb/tiles/13/{x}/{y}.png', DBOX = [6826, 6872, 3499, 3585];
+  var TILE = {}, TILEP = {};
+  function tileXY(lat, lon) { var n = 8192, sl = Math.sin(lat * Math.PI / 180); return [(lon + 180) / 360 * n, (0.5 - Math.log((1 + sl) / (1 - sl)) / (4 * Math.PI)) * n]; }
+  function inBox(x, y) { return x >= DBOX[0] && x <= DBOX[1] && y >= DBOX[2] && y <= DBOX[3]; }
+  function inflate(bytes) { return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer().then(function (b) { return new Uint8Array(b); }); }
+  function decodePng(buf) {   // 8-bit RGB(A), not interlaced, read from the bytes so no colour management touches the values
+    var u = new Uint8Array(buf), dv = new DataView(buf), p = 8, w = 0, h = 0, ct = 0, bd = 0, il = 0, parts = [], n = 0;
+    if (u.length < 8 || u[1] !== 0x50 || u[2] !== 0x4E || u[3] !== 0x47) return Promise.reject(new Error('not png'));
+    while (p + 8 <= u.length) {
+      var len = dv.getUint32(p), ty = String.fromCharCode(u[p + 4], u[p + 5], u[p + 6], u[p + 7]);
+      if (ty === 'IHDR') { w = dv.getUint32(p + 8); h = dv.getUint32(p + 12); bd = u[p + 16]; ct = u[p + 17]; il = u[p + 20]; }
+      else if (ty === 'IDAT') { parts.push(u.subarray(p + 8, p + 8 + len)); n += len; }
+      else if (ty === 'IEND') break;
+      p += 12 + len;
+    }
+    if (bd !== 8 || (ct !== 2 && ct !== 6) || il) return Promise.reject(new Error('png type'));
+    var all = new Uint8Array(n), o = 0;
+    parts.forEach(function (a) { all.set(a, o); o += a.length; });
+    var ch = ct === 6 ? 4 : 3;
+    return inflate(all).then(function (raw) {
+      var st = w * ch, out = new Uint8Array(w * h * ch), prev = new Uint8Array(st);
+      for (var yy = 0; yy < h; yy++) {
+        var f = raw[yy * (st + 1)], base = yy * (st + 1) + 1, cur = out.subarray(yy * st, (yy + 1) * st);
+        for (var i = 0; i < st; i++) {
+          var a = i >= ch ? cur[i - ch] : 0, b = prev[i], c = i >= ch ? prev[i - ch] : 0, x = raw[base + i], v;
+          if (f === 0) v = x; else if (f === 1) v = x + a; else if (f === 2) v = x + b; else if (f === 3) v = x + ((a + b) >> 1);
+          else { var pp = a + b - c, pa = Math.abs(pp - a), pb = Math.abs(pp - b), pc = Math.abs(pp - c); v = x + (pa <= pb && pa <= pc ? a : (pb <= pc ? b : c)); }
+          cur[i] = v & 255;
+        }
+        prev = cur;
+      }
+      return { w: w, h: h, ch: ch, px: out };
+    });
+  }
+  function decodeCanvas(buf) {
+    return createImageBitmap(new Blob([buf], { type: 'image/png' }), { colorSpaceConversion: 'none', premultiplyAlpha: 'none' }).then(function (bm) {
+      var c = document.createElement('canvas'); c.width = bm.width; c.height = bm.height;
+      var g = c.getContext('2d'); g.drawImage(bm, 0, 0);
+      return { w: c.width, h: c.height, ch: 4, px: g.getImageData(0, 0, c.width, c.height).data };
+    });
+  }
+  function getTile(x, y) {
+    var k = x + '/' + y;
+    if (!inBox(x, y)) { TILE[k] = 'out'; return Promise.resolve('out'); }
+    if (TILE[k]) return Promise.resolve(TILE[k]);
+    if (!TILEP[k]) {
+      TILEP[k] = fetch(DEM_URL.replace('{x}', x).replace('{y}', y), { mode: 'cors' })
+        .then(function (r) { if (r.status === 404) return null; if (!r.ok) throw new Error('http ' + r.status); return r.arrayBuffer(); })
+        .then(function (buf) {
+          if (!buf) return 'out';
+          return (typeof DecompressionStream === 'function' ? decodePng(buf) : decodeCanvas(buf)).then(function (im) {
+            var el = new Float32Array(im.w * im.h);
+            for (var i = 0, j = 0; i < el.length; i++, j += im.ch) el[i] = im.ch === 4 && im.px[j + 3] === 0 ? NaN : -10000 + (im.px[j] * 65536 + im.px[j + 1] * 256 + im.px[j + 2]) * 0.1;
+            return { w: im.w, e: el };
+          });
+        })
+        .then(function (t) { TILE[k] = t; delete TILEP[k]; return t; }, function () { TILE[k] = 'fail'; delete TILEP[k]; return 'fail'; });
+    }
+    return TILEP[k];
+  }
+  function demAt(lat, lon) {   // bilinear, metres; null where a tile is missing or has no data
+    var t = tileXY(lat, lon), px = t[0] * 256 - 0.5, py = t[1] * 256 - 0.5, x0 = Math.floor(px), y0 = Math.floor(py), fx = px - x0, fy = py - y0;
+    function g(X, Y) { var tx = Math.floor(X / 256), ty = Math.floor(Y / 256), tl = TILE[tx + '/' + ty]; return !tl || typeof tl === 'string' ? NaN : tl.e[(Y - ty * 256) * tl.w + (X - tx * 256)]; }
+    var a = g(x0, y0), b = g(x0 + 1, y0), c = g(x0, y0 + 1), d = g(x0 + 1, y0 + 1);
+    if (!(isFinite(a) && isFinite(b) && isFinite(c) && isFinite(d))) return null;
+    return a * (1 - fx) * (1 - fy) + b * fx * (1 - fy) + c * (1 - fx) * fy + d * fx * fy;
+  }
+  function needTiles(need, lat, lon) {
+    var t = tileXY(lat, lon), X = Math.floor(t[0] * 256 - 0.5), Y = Math.floor(t[1] * 256 - 0.5);
+    [[X, Y], [X + 1, Y], [X, Y + 1], [X + 1, Y + 1]].forEach(function (q) { var tx = Math.floor(q[0] / 256), ty = Math.floor(q[1] / 256); need[tx + '/' + ty] = [tx, ty]; });
+  }
+  function loadTiles(need) {
+    var keys = Object.keys(need).filter(function (k) { return !TILE[k]; }), i = 0;
+    function next() { if (i >= keys.length) return Promise.resolve(); var q = need[keys[i++]]; return getTile(q[0], q[1]).then(next); }
+    var ws = [];
+    for (var w = 0; w < 6; w++) ws.push(next());
+    return Promise.all(ws);
+  }
+
+  // ================= routes: geometry, profile, numbers =================
+  var MAXR = 7, STEP = 20, BREAKS = [-20, -12, -5, 5, 12, 20];
+  var PAL = ['#000000', '#D55E00', '#0072B2', '#009E73', '#CC3D96', '#6A3D9A', '#E69F00'];   // high contrast on white; gold is light, so it gets a dark edge
+  var PAL_NAME = ['黑', '朱紅', '藍', '綠', '洋紅', '紫', '金黃'];
+  function lum(hex) { var c = parseInt(hex.slice(1), 16); function f(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); } return 0.2126 * f((c >> 16) & 255) + 0.7152 * f((c >> 8) & 255) + 0.0722 * f(c & 255); }
+  function onWhite(hex) { return 1.05 / (lum(hex) + 0.05); }   // contrast ratio against white
+  function edged(hex) { return onWhite(hex) < 3; }             // too light to stand alone on white: outline it
+  function textCol(hex) {   // the same hue, dark enough for small text on white (≥ 4.5:1)
+    var c = parseInt(hex.slice(1), 16), rgb = [(c >> 16) & 255, (c >> 8) & 255, c & 255];
+    for (var k = 1; k > 0.25; k -= 0.04) { var h = '#' + rgb.map(function (v) { return ('0' + Math.round(v * k).toString(16)).slice(-2); }).join(''); if (onWhite(h) >= 4.5) return h; }
+    return '#333333';
+  }
+  var ROUTES = [], SEQ = 1;
+  var S = { title: '', sub: '', note: '', ori: 'p' };
+  function defOpts() { return { rev: false, dej: true, from: null, to: null, real: null, startName: '', endName: '', ptNames: {}, ptShow: {}, short: '', dash: 'auto', loadType: 'none', loadText: '', inTable: null, note: '' }; }
+  function mainR() { return ROUTES[0] || null; }
+  function newRoute(parsed, fileName) {
+    var rec = isRecorded(parsed.pts), P = [];
+    parsed.pts.forEach(function (p) {
+      var q = [Math.round(p.lat * 1e6) / 1e6, Math.round(p.lon * 1e6) / 1e6, p.ele === null ? null : Math.round(p.ele * 10) / 10];
+      if (rec && P.length) { var l = P[P.length - 1]; if (hav(l[0], l[1], q[0], q[1]) < 2) return; }   // standing duplicates (kept small for storage)
+      P.push(q);
+    });
+    var name = (parsed.name || fileName || '').replace(/\.(gpx|kml|kmz)$/i, '').trim() || (fileName || 'GPX');
+    return { id: SEQ++, name: name, file: fileName || '', recorded: rec, color: -1, pts: P,
+             wpts: parsed.wpts.map(function (w) { return { lat: w.lat, lon: w.lon, name: w.name || '' }; }),
+             o: defOpts() };
+  }
+  function base(r) {   // the track as used: reversed, standing drift dropped, cumulative distance, heights filled, waypoints placed
+    var key = (r.o.rev ? 1 : 0) + ':' + (r.recorded && r.o.dej ? 1 : 0);
+    if (r._b && r._bk === key) return r._b;
+    var P = r.o.rev ? r.pts.slice().reverse() : r.pts, i;
+    if (r.recorded && r.o.dej) {
+      var out = [P[0]];
+      for (i = 1; i < P.length; i++) { var q = out[out.length - 1]; if (hav(q[0], q[1], P[i][0], P[i][1]) >= 8) out.push(P[i]); }
+      if (out[out.length - 1] !== P[P.length - 1]) out.push(P[P.length - 1]);
+      P = out;
+    }
+    var n = P.length, cum = new Float64Array(n), ele = new Float64Array(n), have = 0, j = 0;
+    for (i = 1; i < n; i++) cum[i] = cum[i - 1] + hav(P[i - 1][0], P[i - 1][1], P[i][0], P[i][1]);
+    var known = [];
+    for (i = 0; i < n; i++) if (P[i][2] !== null && isFinite(P[i][2])) { known.push(i); have++; }
+    for (i = 0; i < n; i++) {   // gaps in the heights: straight line between the known points
+      if (P[i][2] !== null && isFinite(P[i][2])) { ele[i] = P[i][2]; continue; }
+      while (j < known.length - 1 && known[j + 1] < i) j++;
+      var a = known[j], b = known[j + 1];
+      if (a === undefined) ele[i] = 0; else if (b === undefined || a > i) ele[i] = P[a][2]; else ele[i] = P[a][2] + (P[b][2] - P[a][2]) * (cum[i] - cum[a]) / ((cum[b] - cum[a]) || 1);
+    }
+    // waypoints: one place for every pass within 80 m (an out-and-back passes twice)
+    var wp = [];
+    r.wpts.forEach(function (w, wi) {
+      var run = null, k = 0;
+      for (var m = 0; m <= n; m++) {
+        var d = m < n ? hav(w.lat, w.lon, P[m][0], P[m][1]) : 1e9;
+        if (d <= 80) { if (!run || d < run.dd) run = { dd: d, i: m }; }
+        else if (run) { wp.push({ id: wi + ':' + (k++), wi: wi, name: w.name, d: cum[run.i] }); run = null; }
+      }
+    });
+    wp.sort(function (x, y) { return x.d - y.d; });
+    var hasE = P.map(function (q) { return q[2] !== null && isFinite(q[2]); });
+    r._b = { P: P, cum: cum, ele: ele, hasE: hasE, anyE: have > 0, gaps: have < n, total: cum[n - 1], wp: wp };
+    r._bk = key;
+    return r._b;
+  }
+  function zAt(X, Z, x) {
+    if (x <= 0) return Z[0];
+    if (x >= X[X.length - 1]) return Z[Z.length - 1];
+    var i = Math.min(X.length - 2, Math.floor(x / STEP));
+    while (i < X.length - 2 && X[i + 1] < x) i++;
+    while (i > 0 && X[i] > x) i--;
+    var t = (x - X[i]) / ((X[i + 1] - X[i]) || 1);
+    return Z[i] + (Z[i + 1] - Z[i]) * t;
+  }
+  function prof(r) {
+    var b = base(r), a = r.o.from !== null ? clamp(r.o.from * 1000, 0, b.total) : 0, e = r.o.to !== null ? clamp(r.o.to * 1000, 0, b.total) : b.total;
+    if (a > e) { var sw = a; a = e; e = sw; }
+    if (e - a < 100) { a = 0; e = b.total; }
+    var raw = e - a, L = r.o.real > 0 ? r.o.real * 1000 : raw, sc = L / raw, X = [], Z = [], i, k = 0, nD = 0, miss = false;
+    for (i = 0; i * STEP < L - 1e-6; i++) X.push(i * STEP);
+    X.push(L);
+    X.forEach(function (x) {
+      var d = a + x / sc;
+      while (k < b.cum.length - 2 && b.cum[k + 1] < d) k++;
+      var s0 = b.cum[k], s1 = b.cum[k + 1], f = s1 > s0 ? clamp((d - s0) / (s1 - s0), 0, 1) : 0, p0 = b.P[k], p1 = b.P[k + 1] || p0, k1 = b.P[k + 1] ? k + 1 : k;
+      var okG = (f < 1 ? b.hasE[k] : true) && (f > 0 ? b.hasE[k1] : true);
+      if (okG) { Z.push(b.ele[k] + (b.ele[k1] - b.ele[k]) * f); return; }   // the GPX height
+      var dv = demAt(p0[0] + (p1[0] - p0[0]) * f, p0[1] + (p1[1] - p0[1]) * f);   // no GPX height here: the DTM
+      if (dv !== null) { Z.push(dv); nD++; }
+      else if (b.anyE) Z.push(b.ele[k] + (b.ele[k1] - b.ele[k]) * f);   // no DTM either: between the nearest GPX heights
+      else { Z.push(0); miss = true; }
+    });
+    if (miss) return { err: 'noele' };
+    var src = nD === 0 ? 'gpx' : nD >= X.length ? 'dtm' : 'mix';
+    var Zs = Z.slice();
+    for (i = 1; i < Z.length - 1; i++) Zs[i] = (Z[i - 1] + Z[i] + Z[i + 1]) / 3;
+    var up = 0, dn = 0, zmin = Infinity, zmax = -Infinity;
+    for (i = 0; i < Zs.length; i++) {
+      if (i) { var dz = Zs[i] - Zs[i - 1]; if (dz > 0) up += dz; else dn -= dz; }
+      if (Zs[i] < zmin) zmin = Zs[i];
+      if (Zs[i] > zmax) zmax = Zs[i];
+    }
+    var steep = { v: Zs[Zs.length - 1] - Zs[0], at: 0 }, steepD = { v: Zs[0] - Zs[Zs.length - 1], at: 0 };   // largest net gain / net loss over any 1 km
+    if (L > 1000) {
+      steep.v = steepD.v = -Infinity;
+      for (var s = 0; s <= L - 1000 + 1e-6; s += STEP) { var g = zAt(X, Zs, s + 1000) - zAt(X, Zs, s); if (g > steep.v) { steep.v = g; steep.at = s; } if (-g > steepD.v) { steepD.v = -g; steepD.at = s; } }
+    }
+    var cls = [], km20 = 0, km20d = 0, ckm = [0, 0, 0, 0, 0, 0, 0];
+    for (var e0 = 0; e0 < L - 1e-6; e0 += 100) {
+      var e1 = Math.min(L, e0 + 100), gr = (zAt(X, Zs, e1) - zAt(X, Zs, e0)) / ((e1 - e0) || 1) * 100, c = 0;
+      for (var q = 0; q < BREAKS.length; q++) if (gr >= BREAKS[q]) c = q + 1;
+      cls.push(c); ckm[c] += e1 - e0;
+      if (gr >= 20) km20 += e1 - e0;
+      if (gr <= -20) km20d += e1 - e0;
+    }
+    function steepest(W) {   // largest net gain and net loss over any stretch of W metres, as grade %
+      if (L < W - 1e-6) return [null, null];
+      var bu = -Infinity, bd = -Infinity;
+      for (var s2 = 0; s2 <= L - W + 1e-6; s2 += STEP) { var g2 = zAt(X, Zs, s2 + W) - zAt(X, Zs, s2); if (g2 > bu) bu = g2; if (-g2 > bd) bd = -g2; }
+      return [bu / W * 100, bd / W * 100];
+    }
+    var st3 = steepest(300), st10 = steepest(1000), imax = 0;
+    for (i = 1; i < Zs.length; i++) if (Zs[i] > Zs[imax]) imax = i;
+    var isMain = r === mainR(), maxAt = X[imax];
+    var maxQ = zmax >= Math.max(Zs[0], Zs[Zs.length - 1]) + Math.max(15, 0.04 * (zmax - zmin)) && maxAt > 0.02 * L && maxAt < 0.98 * L;
+    // named places in range
+    function wname(w) { return has(r.o.ptNames, w.id) ? r.o.ptNames[w.id] : w.name; }
+    var near0 = null, near1 = null, mid = [];
+    b.wp.forEach(function (w) {
+      if (Math.abs(w.d - a) <= 60 && !near0) near0 = w;
+      else if (Math.abs(w.d - e) <= 60) near1 = w;
+      else if (w.d > a && w.d < e) mid.push({ id: w.id, name: wname(w), x: (w.d - a) * sc, show: has(r.o.ptShow, w.id) ? !!r.o.ptShow[w.id] : isMain });
+    });
+    mid.forEach(function (m) { m.z = zAt(X, Zs, m.x); m.ze = zAt(X, Z, m.x); });   // z places the marker on the drawn line; ze is the elevation printed (GPX, unsmoothed)
+    var zmaxE = -Infinity, dA = a + maxAt / sc - 100, dB = a + maxAt / sc + 100;   // printed high point: highest GPX value within 100 m of the top of the line
+    for (i = 0; i < X.length; i++) if (Math.abs(X[i] - maxAt) <= 100 * sc && Z[i] > zmaxE) zmaxE = Z[i];
+    for (i = 0; i < b.cum.length; i++) if (b.hasE[i] && b.cum[i] >= Math.max(a, dA) && b.cum[i] <= Math.min(e, dB) && b.ele[i] > zmaxE) zmaxE = b.ele[i];
+    var maxDup = mid.some(function (m) { return m.show && Math.abs(m.x - maxAt) < 150; });   // a named point already marks the top
+    var startName = r.o.startName || (near0 && wname(near0)) || _t('起點');
+    var endName = r.o.endName || (near1 && wname(near1)) || (r === mainR() ? _t('終點') : r.name);
+    return { x: X, z: Zs, len: L, raw: raw, gps: b.total, a: a, e: e, sc: sc, src: src, up: up, dn: dn, z0: Zs[0], z1: Zs[Zs.length - 1], zmin: zmin, zmax: zmax, zmaxE: zmaxE,
+             net: Zs[Zs.length - 1] - Zs[0], steep: steep, steepD: steepD, cls: cls, ckm: ckm, km20: km20, km20d: km20d, mid: mid, startName: startName, endName: endName, scaled: r.o.real > 0,
+             s300u: st3[0], s300d: st3[1], s1000u: st10[0], s1000d: st10[1], maxAt: maxAt, maxQ: maxQ, maxDup: maxDup,
+             maxShow: (has(r.o.ptShow, 'max') ? !!r.o.ptShow.max : isMain) && !maxDup, maxName: has(r.o.ptNames, 'max') && r.o.ptNames.max ? r.o.ptNames.max : _t('最高點') };
+  }
+
+  // ================= the card: A4 pages laid out in pt, painted at any scale =================
+  var A4 = { p: [595.28, 841.89], l: [841.89, 595.28] }, MARGIN = 28.35, PT2PX = 300 / 72;   // 10 mm print margin; 300 dpi
+  var GC = ['#08519d', '#3186e9', '#87bafc', '#d8d7d4', '#fd978f', '#e24947', '#9b0d1a'];   // grade colours ≤−20% … ≥+20%, as in 步程試算
+  var K = { bg: '#ffffff', ink: '#16201a', ink2: '#4a574f', muted: '#7a877f', line: '#d8ded9', grid: '#e7ebe8', zero: '#c3cbc5', fill: '#c9d0cb', heavy: '#7a5a43', light: '#7f93a8', lightBar: '#b9c7d6' };
+  // the main route is the only solid line; each colour has its own dash, so the lines stay apart on a black-and-white print
+  var DASHES = { solid: [], dash: [5, 3], long: [11, 3.5], dot: [0.01, 3.2], dashdot: [7, 2.6, 0.01, 2.6], dashdotdot: [6.5, 2.3, 0.01, 2.3, 0.01, 2.3], longdashdot: [12, 2.8, 0.01, 2.8], shortdash: [2.4, 2] };
+  var AUTO_DASH = ['dashdotdot', 'dash', 'long', 'dot', 'dashdot', 'longdashdot', 'shortdash'];
+  var DASH_NAME = [['auto', '自動'], ['solid', '實線'], ['dash', '虛線'], ['long', '長虛線'], ['dot', '點線'], ['dashdot', '點虛線'], ['dashdotdot', '雙點虛線'], ['longdashdot', '長點虛線'], ['shortdash', '短虛線']];
+  var CLS_NAME = ['極陡下坡', '陡下坡', '下坡', '平緩', '一般上坡', '陡上坡', '極陡上坡'];
+  var CLS_RANGE = ['−20% 或更陡', '−20 ~ −12%', '−12 ~ −5%', '−5 ~ +5%', '+5 ~ +12%', '+12 ~ +20%', '+20% 或更陡'];
+  function fUI() { return LANG === 'en' ? '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang TC","Noto Sans TC","Noto Sans CJK TC",sans-serif' : '"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif'; }
+  function ovl(a, b) { var w = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), h = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0); return w > 0 && h > 0 ? w * h : 0; }
+  function signed(v) { var n = Math.round(v); return n > 0 ? '+' + nf(n) : n < 0 ? '−' + nf(-n) : '0'; }
+  function dashOf(r, isMain) { return isMain ? 'solid' : (r.o.dash && DASHES[r.o.dash] ? r.o.dash : AUTO_DASH[r.color >= 0 ? r.color : 0]); }
+  function shortOf(r) { return String(r.o.short || '').trim() || String(r.name || ''); }   // places with little room shorten it by width
+  function inTable(r) { return r.o.inTable === true || r.o.inTable === false ? r.o.inTable : (r === mainR() || r.recorded); }
+  function loadOf(r) { return r.o.loadType === 'heavy' || r.o.loadType === 'light' ? r.o.loadType : ''; }
+
+  function buildDoc(D, ori) {
+    var LAND = ori === 'l', PWd = A4[ori][0], PHd = A4[ori][1], X0 = MARGIN, CW = PWd - 2 * MARGIN;
+    var TOPY = MARGIN, BOTY = PHd - MARGIN, FOOT = 18, RUN = 24, GAP = 10;
+    var FS = { title: 19, stats: 10.5, sub: 8.8, sec: 11.5, cap: 8, body: 8.2, label: 8.2, axis: 7.4, legend: 8.6, table: 8.2, foot: 7.2 };
+    var mc = document.createElement('canvas').getContext('2d');
+    function F(w, s) { return w + ' ' + s + 'px ' + fUI(); }
+    function tw(t, f) { mc.font = f; return mc.measureText(t).width; }
+    function toks(s) { return String(s).match(/[⺀-鿿豈-﫿＀-￯　-〿]|[^\s⺀-鿿豈-﫿＀-￯　-〿]+|\s+/g) || []; }
+    function wrap(s, f, w) {   // CJK breaks anywhere, Latin at spaces; closing punctuation never starts a line, an opening bracket never ends one
+      var out = [], line = '';
+      String(s).split('\n').forEach(function (para) {
+        line = '';
+        toks(para).forEach(function (tk) {
+          var cand = line + tk;
+          if (line && tw(cand.replace(/\s+$/, ''), f) > w) {
+            if (/^[，。、；：）」』%,.;:)\]！？!?]/.test(tk)) { out.push((line + tk).replace(/\s+$/, '')); line = ''; return; }
+            var carry = (line.match(/[（「『(\[]+$/) || [''])[0];
+            if (carry && carry.length < line.length) line = line.slice(0, -carry.length); else carry = '';
+            out.push(line.replace(/\s+$/, '')); line = carry + (/^\s+$/.test(tk) ? '' : tk);
+          } else line = cand;
+        });
+        if (line.trim()) out.push(line.replace(/\s+$/, ''));
+      });
+      return out;
+    }
+    function mk() {   // a block: drawing ops relative to its own top, and its height
+      var b = { ops: [], h: 0 };
+      b.draw = function (fn) { b.ops.push(fn); };
+      b.text = function (t, x, y, f, c, al, halo) {
+        b.ops.push(function (g) {
+          g.font = f; g.textAlign = al || 'left'; g.textBaseline = 'alphabetic';
+          if (halo) { g.lineJoin = 'round'; g.strokeStyle = '#ffffff'; g.lineWidth = halo; g.strokeText(t, x, y); }
+          g.fillStyle = c; g.fillText(t, x, y);
+        });
+      };
+      b.rule = function (y, c, w) { b.ops.push(function (g) { g.fillStyle = c; g.fillRect(X0, y, CW, w); }); };
+      b.para = function (s, f, c, lh, x, w, y) { wrap(s, f, w).forEach(function (ln) { y += lh; b.text(ln, x, y, f, c); }); return y; };
+      return b;
+    }
+    function secHead(b, y, title, cap) {
+      b.rule(y, K.line, 0.6);
+      var ft = F(700, FS.sec), fc = F(400, FS.cap);
+      y += 7 + FS.sec * 1.15;
+      b.text(title, X0, y, ft, K.ink);
+      if (cap) {
+        if (tw(cap, fc) < CW - tw(title, ft) - 24) b.text(cap, X0 + CW, y, fc, K.ink2, 'right');
+        else y = b.para(cap, fc, K.ink2, FS.cap * 1.55, X0, CW, y);
+      }
+      return y + 9;
+    }
+    var M = D.main, mp = M.p, comps = D.comps, all = [M].concat(comps), any = comps.length > 0, START = true;   // every line starts at 0 km, 0 m
+    function col(r) { return PAL[r.color >= 0 ? r.color : 0]; }
+    function yv(r, i) { return START ? r.p.z[i] - r.p.z0 : r.p.z[i]; }
+    function yAt(r, x) { var z = zAt(r.p.x, r.p.z, x); return START ? z - r.p.z0 : z; }
+    function elev(z) { return nf(z) + ' m'; }
+    function strokeRoute(g, r, isMain, w) {   // a line in its colour and dash; round caps for dots; light colours get a dark edge
+      var d = dashOf(r, isMain), c = col(r), lw = d === 'dot' ? w + 0.6 : w;
+      g.setLineDash(DASHES[d]); g.lineCap = /dot/.test(d) ? 'round' : 'butt'; g.lineJoin = 'round';
+      if (edged(c)) { g.strokeStyle = 'rgba(22,32,26,.9)'; g.lineWidth = lw + 1.3; g.stroke(); }
+      g.strokeStyle = c; g.lineWidth = lw; g.stroke(); g.setLineDash([]);
+    }
+    function mainPts() {   // start, high point, named points, end
+      var out = [{ name: mp.startName, x: 0, z: mp.z0, kind: 'start' }];
+      if (mp.maxQ && mp.maxShow) out.push({ name: mp.maxName, x: mp.maxAt, z: mp.zmax, ze: mp.zmaxE, kind: 'max' });
+      mp.mid.forEach(function (m) { if (m.show && m.name) out.push({ name: m.name, x: m.x, z: m.z, ze: m.ze, kind: 'mid' }); });
+      out.push({ name: mp.endName, x: mp.len, z: mp.z1, kind: 'end' });
+      return out;
+    }
+    // label placement: the spot that covers the fewest lines, labels, markers and grade bars, as close to its point as possible
+    function segX(a, b, c, d) {   // do segments ab and cd cross?
+      function o(p, q, r) { return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]); }
+      return (o(a, b, c) > 0) !== (o(a, b, d) > 0) && (o(c, d, a) > 0) !== (o(c, d, b) > 0);
+    }
+    function segRect(a, b, rc) { for (var t = 0.08; t < 0.97; t += 0.08) { var x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t; if (x > rc.x0 && x < rc.x1 && y > rc.y0 && y < rc.y1) return true; } return false; }
+    function makePlacer(bounds, pts, rects, fillTest) {
+      var placed = rects.slice(), labels = [], leaders = [];
+      // direction from the point, which corner of the label meets it (h: l/c/r, v: t/m/b), and a small preference cost
+      var DIRS = [[1, 0, 'l', 'm', 0], [0.71, -0.71, 'l', 'b', 0.4], [0, -1, 'c', 'b', 0.8], [0, -1, 'l', 'b', 0.9], [0, -1, 'r', 'b', 1.1], [-0.71, -0.71, 'r', 'b', 1.2], [-1, 0, 'r', 'm', 1.8],
+                  [0.71, 0.71, 'l', 't', 2.4], [0, 1, 'c', 't', 3], [0, 1, 'l', 't', 3.1], [0, 1, 'r', 't', 3.2], [-0.71, 0.71, 'r', 't', 3.4]];
+      var DIST = [2, 6, 12, 20, 30, 44, 62, 86, 116];
+      return function (it) {
+        var best = null;
+        it.forms.forEach(function (Ls, fi) {
+          var w = Math.max.apply(null, Ls.map(function (s) { return tw(s, it.font); })), h = Ls.length * it.lh;
+          DIST.forEach(function (d) {
+            DIRS.forEach(function (dv) {
+              var gap = it.r + d, ax = it.ax + dv[0] * gap, ay = it.ay + dv[1] * gap;
+              var x0 = dv[2] === 'l' ? (dv[0] ? ax : ax - 3) : dv[2] === 'r' ? (dv[0] ? ax - w : ax + 3 - w) : ax - w / 2, y0 = dv[3] === 't' ? ay : dv[3] === 'b' ? ay - h : ay - h / 2;
+              var rc = { x0: x0 - 1.5, y0: y0 - 0.5, x1: x0 + w + 1.5, y1: y0 + h + 0.5 };
+              if (rc.x0 < bounds.x0 || rc.x1 > bounds.x1 || rc.y0 < bounds.y0 || rc.y1 > bounds.y1) return;
+              var hit = 0, ov = 0;
+              for (var q = 0; q < pts.length; q++) { var p = pts[q]; if (p[0] >= rc.x0 && p[0] <= rc.x1 && p[1] >= rc.y0 - 0.8 && p[1] <= rc.y1 + 0.8) hit++; }
+              for (var k = 0; k < placed.length; k++) ov += ovl(rc, placed[k]);
+              var s = ov * 8 + hit * 30 + (fillTest ? fillTest(rc) * 10 : 0) + d * 1.3 + dv[4] * 2 + (it.cost[fi] || 0), ld = null;
+              if (d >= 10) {   // a leader will be drawn: keep it clear of other leaders and labels
+                ld = [[it.ax, it.ay], [clamp(it.ax, rc.x0, rc.x1), clamp(it.ay, rc.y0, rc.y1)]];
+                for (var m = 0; m < leaders.length; m++) if (segX(ld[0], ld[1], leaders[m][0], leaders[m][1])) s += 500;
+                for (var n = 0; n < labels.length; n++) if (segRect(ld[0], ld[1], labels[n])) s += 500;
+              }
+              for (var m2 = 0; m2 < leaders.length; m2++) if (segRect(leaders[m2][0], leaders[m2][1], rc)) s += 500;
+              if (!best || s < best.s) best = { s: s, rc: rc, Ls: Ls, w: w, x0: x0, y0: y0, dv: dv, d: d, ld: ld, onFill: fillTest ? fillTest(rc) > 0 : false };
+            });
+          });
+        });
+        if (!best) {   // nowhere inside: right of the point, clipped by nothing
+          var Ls0 = it.forms[0], w0 = Math.max.apply(null, Ls0.map(function (s) { return tw(s, it.font); }));
+          best = { rc: { x0: it.ax + it.r + 2, y0: it.ay - it.lh / 2, x1: it.ax + it.r + 2 + w0, y1: it.ay + it.lh / 2 }, Ls: Ls0, w: w0, x0: it.ax + it.r + 2, y0: it.ay - it.lh * Ls0.length / 2, dv: [1, 0, 'l', 'm', 0], d: 0 };
+        }
+        placed.push(best.rc); labels.push(best.rc);
+        if (best.ld) leaders.push(best.ld);
+        return best;
+      };
+    }
+    function drawLabel(b, it, res) {
+      var al = res.dv[2] === 'l' ? 'left' : res.dv[2] === 'r' ? 'right' : 'center', tx = al === 'left' ? res.x0 : al === 'right' ? res.x0 + res.w : res.x0 + res.w / 2;
+      if (res.d >= 10) {   // leader from the marker to the nearest edge of the label
+        var rc = res.rc, nx = clamp(it.ax, rc.x0, rc.x1), ny = clamp(it.ay, rc.y0, rc.y1), dx = nx - it.ax, dy = ny - it.ay, L = Math.sqrt(dx * dx + dy * dy) || 1;
+        b.draw(function (g) { g.beginPath(); g.moveTo(it.ax + dx / L * (it.r + 0.8), it.ay + dy / L * (it.r + 0.8)); g.lineTo(nx, ny); g.strokeStyle = it.color; g.lineWidth = 0.6; g.stroke(); });
+      }
+      if (res.onFill) {   // on the coloured bars: a framed white box, readable on screen and in black and white
+        var bx = res.rc;
+        b.draw(function (g) { g.beginPath(); if (g.roundRect) g.roundRect(bx.x0 - 1.5, bx.y0 - 1, bx.x1 - bx.x0 + 3, bx.y1 - bx.y0 + 2, 2); else g.rect(bx.x0 - 1.5, bx.y0 - 1, bx.x1 - bx.x0 + 3, bx.y1 - bx.y0 + 2); g.fillStyle = 'rgba(255,255,255,.94)'; g.fill(); g.lineWidth = 0.6; g.strokeStyle = it.color; g.stroke(); });
+      }
+      res.Ls.forEach(function (s, k) { b.text(s, tx, res.y0 + (k + 1) * it.lh - it.lh * 0.24, it.font, it.color, al, res.onFill ? 0 : 2.6); });
+    }
+
+    // ---- shared distance axis: the profile and the grade bands line up ----
+    var AXL = 46, RR = LAND ? 40 : 30, PL = X0 + AXL, PWp = CW - AXL - RR;
+    var maxLen = Math.max.apply(null, all.map(function (r) { return r.p.len; }));
+    var tick = maxLen <= 3000 ? 500 : maxLen <= 12000 ? 1000 : maxLen <= 25000 ? 2000 : maxLen <= 60000 ? 5000 : 10000;
+    if (PWp / (maxLen / tick) < 34) tick *= 2;
+    var XMAX = Math.ceil(maxLen * 1.02 / tick) * tick;
+    function sx(x) { return PL + PWp * x / XMAX; }
+    function xAxis(b, y) {
+      var f = F(400, FS.axis), last = '';
+      for (var kx = 0; kx <= XMAX + 1e-6; kx += tick) { last = tick < 1000 ? (kx / 1000).toFixed(1) : String(Math.round(kx / 1000)); b.text(last, sx(kx), y, f, K.ink2, 'center'); }
+      b.text('km', sx(XMAX) + tw(last, f) / 2 + 6, y, f, K.ink2, 'left');
+    }
+
+    // ---- header ----
+    function blockHeader() {
+      var b = mk(), y = 0, chain = [nf(mp.z0)];
+      if (mp.maxQ) chain.push(nf(mp.zmaxE));
+      chain.push(nf(mp.z1));
+      y = b.para(D.title, F(700, FS.title), K.ink, FS.title * 1.28, X0, CW, y - FS.title * 0.2);
+      y += 3;
+      y = b.para(_f('{0} km・爬升 {1} m、下降 {2} m，海拔 {3} m', km1(mp.len), nf(mp.up), nf(mp.dn), chain.join(' → ')), F(400, FS.stats), K.ink, FS.stats * 1.55, X0, CW, y);
+      if (D.sub) y = b.para(D.sub, F(400, FS.sub), K.ink2, FS.sub * 1.6, X0, CW, y);
+      b.h = y + 6;
+      return b;
+    }
+
+    // ---- 1:1 ----
+    function block11() {
+      var b = mk(), y = secHead(b, 0, _t('同比例：高度與距離 1:1'), _t('不放大高度時，這段路真正的樣子'));
+      var RL = any ? 70 : 40, s11 = (CW - 4 - RL) / maxLen, zb = Math.min.apply(null, all.map(function (r) { return r.p.zmin; }));
+      function v11(r, i) { return START ? r.p.z[i] - r.p.z0 : r.p.z[i] - zb; }
+      var vmax = -Infinity, vmin = Infinity;
+      all.forEach(function (r) { for (var i = 0; i < r.p.z.length; i++) { var v = v11(r, i); if (v > vmax) vmax = v; if (v < vmin) vmin = v; } });
+      var cap11 = LAND ? 96 : 105;
+      if ((vmax - vmin) * s11 > cap11) s11 = cap11 / (vmax - vmin);   // still 1:1, just narrower
+      var x0 = X0 + 2, top = y + 16;
+      function X(x) { return x0 + x * s11; }
+      function Y(v) { return top + (vmax - v) * s11; }
+      var bot = Y(vmin);
+      function path(g, r) { g.beginPath(); for (var i = 0; i < r.p.z.length; i++) { var px = X(r.p.x[i]), py = Y(v11(r, i)); if (i) g.lineTo(px, py); else g.moveTo(px, py); } }
+      b.draw(function (g) {
+        g.fillStyle = K.line; g.fillRect(X0, bot, CW, 0.6);
+        path(g, M); g.lineTo(X(mp.len), bot); g.lineTo(X(0), bot); g.closePath(); g.fillStyle = K.fill; g.fill();
+        comps.slice().reverse().forEach(function (r) { path(g, r); g.strokeStyle = '#ffffff'; g.lineWidth = 2.8; g.lineJoin = 'round'; g.stroke(); path(g, r); strokeRoute(g, r, false, 1.25); });
+        path(g, M); g.strokeStyle = K.ink; g.lineWidth = 1.3; g.lineJoin = 'round'; g.stroke();
+      });
+      var pts = [];
+      all.forEach(function (r) { for (var i = 0; i < r.p.z.length; i++) pts.push([X(r.p.x[i]), Y(v11(r, i))]); });
+      var place = makePlacer({ x0: X0, x1: X0 + CW, y0: top - 15, y1: bot + 14 }, pts, [], null), f = F(700, FS.label - 0.4), labs = [];
+      function add(r, x, z, name) { if (!name) return; var it = { ax: X(x), ay: Y(START ? z - r.p.z0 : z - zb), r: 1.5, forms: [[name]], cost: [0], font: f, lh: FS.label * 1.2, color: r === M ? K.ink : textCol(col(r)) }; labs.push([it, place(it)]); }
+      add(M, mp.len, mp.z1, mp.endName);
+      comps.forEach(function (r) { add(r, r.p.len, r.p.z1, r.p.endName); });
+      comps.forEach(function (r) { r.p.mid.forEach(function (m) { if (m.show) add(r, m.x, m.z, m.name); }); });
+      var lowest = bot;
+      labs.forEach(function (q) { drawLabel(b, q[0], q[1]); lowest = Math.max(lowest, q[1].rc.y1); });
+      y = lowest + 6;
+      var cap = _f('灰色是{0}。', M.name) + (any ? _f('其他線的起點都對齊{0}（0 km、{1} m），方便比較陡度與長度。', mp.startName, nf(mp.z0)) : '');
+      y = b.para(cap, F(400, FS.body), K.ink2, FS.body * 1.65, X0, CW, y);
+      b.h = y + 4;
+      return b;
+    }
+
+    // ---- profile ----
+    function blockProfile(PH) {
+      var b = mk(), y = 0, vmin = Infinity, vmax = -Infinity;
+      all.forEach(function (r) { for (var i = 0; i < r.p.z.length; i++) { var v = yv(r, i); if (v < vmin) vmin = v; if (v > vmax) vmax = v; } });
+      if (START) vmin = Math.min(vmin, 0);
+      var span = Math.max(vmax - vmin, 100), vbot = vmin - span * 0.035, vtop = vmax + span * 0.1;
+      var ystep = (function (span2, target) {   // 1-2-5 steps (…, 100, 200, 500, …) closest to the wanted number of lines; the same in both orientations
+        var best = null;
+        [1, 2, 5].forEach(function (m) { [1, 10, 100, 1000, 10000].forEach(function (p) { var st = m * p, d = Math.abs(span2 / st - target); if (!best || d < best.d) best = { d: d, st: st }; }); });
+        return best.st;
+      })(vtop - vbot, 8), EX = (PH / (vtop - vbot)) / (PWp / XMAX);
+      y = secHead(b, y, _t('高度剖面'), _f('高度放大 {0} 倍，才看得出起伏', EX >= 10 ? Math.round(EX) : EX.toFixed(1)));
+      all.filter(loadOf).forEach(function (r) {   // the stretch each pack is carried, above the chart
+        var c = loadOf(r) === 'heavy' ? K.heavy : K.light, f = F(700, FS.label), x0 = sx(0), x1 = sx(r.p.len);
+        var sep = LANG === 'en' ? ' · ' : '　';
+        var lab = shortOf(r) + ' ' + ((r.o.loadText || '').trim() || _t(loadOf(r) === 'heavy' ? '重裝' : '輕裝')) + sep + km1(r.p.len) + ' km' + sep + '+' + nf(r.p.up) + slash() + '−' + nf(r.p.dn) + ' m';
+        var w = tw(lab, f), cx = (x0 + x1) / 2, tx = w > x1 - x0 ? x0 + w / 2 : cx;
+        y += FS.label * 1.25;
+        b.text(lab, Math.min(tx, X0 + CW - w / 2), y, f, c, 'center');
+        var ay = y + 5;
+        b.draw(function (g) {
+          g.strokeStyle = c; g.fillStyle = c; g.lineWidth = 1;
+          g.beginPath(); g.moveTo(x0 + 1, ay); g.lineTo(x1 - 1, ay); g.stroke();
+          [[x0, 1], [x1, -1]].forEach(function (q) { g.beginPath(); g.moveTo(q[0], ay); g.lineTo(q[0] + q[1] * 5, ay - 2.6); g.lineTo(q[0] + q[1] * 5, ay + 2.6); g.closePath(); g.fill(); });
+        });
+        y = ay + 3;
+      });
+      var TOP = y + 10, BOT = TOP + PH;
+      function sy(v) { return TOP + PH * (1 - (v - vbot) / (vtop - vbot)); }
+      b.draw(function (g) {   // grid, height labels, axis title
+        g.font = F(400, FS.axis); g.textAlign = 'right'; g.textBaseline = 'middle';
+        for (var v = Math.ceil(vbot / ystep) * ystep; v <= vtop + 1e-6; v += ystep) {
+          var yy = sy(v);
+          g.fillStyle = START && Math.abs(v) < 1e-6 ? K.zero : K.grid; g.fillRect(PL, yy - 0.3, PWp + RR, 0.6);
+          g.fillStyle = K.ink2; g.fillText(START ? signed(v) : nf(v), PL - 5, yy);
+        }
+        g.save(); g.translate(X0 + 4, (TOP + BOT) / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = K.ink2;
+        g.fillText(_t('相對起點的高度 (m)'), 0, 0); g.restore();
+      });
+      b.draw(function (g) {   // grade bars under the main route, 100 m each
+        var X = mp.x;
+        mp.cls.forEach(function (c, k) {
+          var a0 = k * 100, b0 = Math.min(mp.len, a0 + 100);
+          g.beginPath(); g.moveTo(sx(a0), BOT); g.lineTo(sx(a0), sy(yAt(M, a0)));
+          for (var i = 0; i < X.length; i++) if (X[i] > a0 && X[i] < b0) g.lineTo(sx(X[i]), sy(yv(M, i)));
+          g.lineTo(sx(b0), sy(yAt(M, b0))); g.lineTo(sx(b0), BOT); g.closePath();
+          g.fillStyle = GC[c]; g.fill(); g.lineWidth = 0.5; g.strokeStyle = GC[c]; g.stroke();
+        });
+      });
+      function path(g, r) { g.beginPath(); for (var i = 0; i < r.p.z.length; i++) { var px = sx(r.p.x[i]), py = sy(yv(r, i)); if (i) g.lineTo(px, py); else g.moveTo(px, py); } }
+      comps.slice().reverse().forEach(function (r) {
+        b.draw(function (g) { path(g, r); g.strokeStyle = '#ffffff'; g.lineWidth = 3.6; g.lineJoin = 'round'; g.lineCap = 'round'; g.globalAlpha = 0.95; g.stroke(); g.globalAlpha = 1; path(g, r); strokeRoute(g, r, false, 1.5); });
+      });
+      b.draw(function (g) { path(g, M); g.strokeStyle = '#ffffff'; g.globalAlpha = 0.75; g.lineWidth = 3; g.lineJoin = 'round'; g.stroke(); g.globalAlpha = 1; path(g, M); g.strokeStyle = K.ink; g.lineWidth = 1.5; g.stroke(); });
+      // markers and labels: actual elevation beside every name
+      var pts = [], markers = [], items = [], fL = F(700, FS.label), lh = FS.label * 1.22;
+      all.forEach(function (r) { for (var i = 0; i < r.p.z.length; i++) pts.push([sx(r.p.x[i]), sy(yv(r, i))]); });
+      mainPts().forEach(function (p) {
+        var ax = sx(p.x), ay = sy(START ? p.z - mp.z0 : p.z);
+        markers.push({ x: ax, y: ay, r: 2.8, c: K.ink });
+        items.push({ ax: ax, ay: ay, r: 2.8, forms: [[p.name, elev(p.ze !== undefined ? p.ze : p.z)], [p.name + ' ' + elev(p.ze !== undefined ? p.ze : p.z)]], cost: [0, 5], font: fL, lh: lh, color: K.ink });
+      });
+      comps.forEach(function (r) {
+        var ax = sx(r.p.len), ay = sy(yv(r, r.p.z.length - 1)), nm = r.p.endName;
+        markers.push({ x: ax, y: ay, r: 2.3, c: textCol(col(r)) });
+        items.push({ ax: ax, ay: ay, r: 2.3, forms: [[nm + ' ' + elev(r.p.z1)], [nm, elev(r.p.z1)]], cost: [0, 6], font: fL, lh: lh, color: textCol(col(r)) });
+        r.p.mid.forEach(function (m) {
+          if (!m.show || !m.name) return;
+          var mx = sx(m.x), my = sy(START ? m.z - r.p.z0 : m.z);
+          markers.push({ x: mx, y: my, r: 2.3, c: textCol(col(r)) });
+          items.push({ ax: mx, ay: my, r: 2.3, forms: [[m.name + ' ' + elev(m.ze)], [m.name, elev(m.ze)]], cost: [0, 6], font: fL, lh: lh, color: textCol(col(r)) });
+        });
+      });
+      function fillTest(rc) {
+        var n = 0;
+        for (var xx = rc.x0; xx <= rc.x1; xx += 2) { var xm = (xx - PL) / PWp * XMAX; if (xm >= 0 && xm <= mp.len && rc.y1 > sy(yAt(M, xm)) + 1) n++; }
+        return n;
+      }
+      var obst = markers.map(function (m) { return { x0: m.x - m.r - 1, y0: m.y - m.r - 1, x1: m.x + m.r + 1, y1: m.y + m.r + 1 }; }), fA = F(400, FS.axis);
+      for (var v2 = Math.ceil(vbot / ystep) * ystep; v2 <= vtop + 1e-6; v2 += ystep) { var yy2 = sy(v2), tl = START ? signed(v2) : nf(v2); obst.push({ x0: PL - 6 - tw(tl, fA), y0: yy2 - 5, x1: PL - 2, y1: yy2 + 5 }); }   // height labels stay readable
+      var place = makePlacer({ x0: X0 + 12, x1: X0 + CW, y0: TOP - 12, y1: BOT - 1 }, pts, obst, fillTest);
+      var res = items.map(function (it) { return place(it); });
+      b.draw(function (g) {
+        markers.forEach(function (m) { g.beginPath(); g.arc(m.x, m.y, m.r, 0, Math.PI * 2); g.fillStyle = '#ffffff'; g.fill(); g.lineWidth = 1.1; g.strokeStyle = m.c; g.stroke(); });
+      });
+      items.forEach(function (it, i) { drawLabel(b, it, res[i]); });
+      y = BOT + 12;
+      xAxis(b, y);
+      y += 6;
+      var para = _t('縱軸是相對起點的高度：每條線都從 0 km、0 m 起算，看的是陡度與長度；地名旁的數字才是實際海拔。') + _f('主線起點是{0} {1} m。', mp.startName, nf(mp.z0));
+      y = b.para(para, F(400, FS.body), K.ink2, FS.body * 1.65, X0, CW, y);
+      b.h = y + 4;
+      b.EX = EX;
+      return b;
+    }
+
+    // ---- legend: the comparison lines with their distance and climb ----
+    function blockLegend() {
+      if (!any) return null;
+      var b = mk(), y = 2, f = F(400, FS.legend), lh = FS.legend * 1.55;
+      var kmS = comps.map(function (r) { return km1(r.p.len) + ' km'; }), udS = comps.map(function (r) { return '+' + nf(r.p.up) + (r.p.dn >= 0.5 ? slash() + '−' + nf(r.p.dn) : '') + ' m'; });
+      var kmW = Math.max.apply(null, kmS.map(function (s) { return tw(s, f); })), udW = Math.max.apply(null, udS.map(function (s) { return tw(s, f); }));
+      var nx = X0 + 36, nw = CW - 36 - kmW - udW - 26;
+      comps.forEach(function (r, i) {
+        var Ls = wrap(r.name, f, nw), ly = y + lh * 0.62;
+        b.draw(function (g) { g.beginPath(); g.moveTo(X0 + 1, ly); g.lineTo(X0 + 27, ly); strokeRoute(g, r, false, 1.6); });
+        Ls.forEach(function (s, k) { b.text(s, nx, y + lh * (k + 1) - lh * 0.3, f, K.ink); });
+        b.text(kmS[i], X0 + CW - udW - 14, y + lh - lh * 0.3, f, K.ink, 'right');
+        b.text(udS[i], X0 + CW, y + lh - lh * 0.3, f, K.ink, 'right');
+        y += lh * Ls.length + 1.5;
+      });
+      b.h = y + 2;
+      return b;
+    }
+
+    // ---- notes of one route: lines starting with ・ are bullets, other lines are headings ----
+    function blockRouteNote(r) {
+      var L = String(r.o.note || '').split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+      if (!L.length) return null;
+      var b = mk(), y = 0, fh = F(700, FS.legend), fb = F(400, FS.body), lhb = FS.body * 1.6;
+      var isB = function (s) { return /^[・•·\-*＊]/.test(s); };
+      if (isB(L[0])) L.unshift(r.name);
+      L.forEach(function (s) {
+        if (isB(s)) {
+          var t = s.replace(/^[・•·\-*＊]\s*/, ''), Ls = wrap(t, fb, CW - 12);
+          Ls.forEach(function (ln, k) { y += lhb; if (!k) b.text(LANG === 'en' ? '•' : '・', X0, y, fb, K.ink); b.text(ln, X0 + 11, y, fb, K.ink); });
+        } else { y += FS.legend * 1.7; y = b.para(s, fh, K.ink, FS.legend * 1.55, X0, CW, y - FS.legend * 1.55); }
+      });
+      b.h = y + 4;
+      return b;
+    }
+
+    // ---- grade bands and loads ----
+    function blockBands() {
+      var rs = all.filter(loadOf);
+      if (!rs.length) return null;
+      var b = mk(), y = secHead(b, 0, _t('坡度帶與揹負'), _t('每 100 m 一格，對齊上方剖面')), SH = 17, LH = 11;
+      rs.forEach(function (r) {
+        var heavy = loadOf(r) === 'heavy', txt = (r.o.loadText || '').trim() || _t(heavy ? '重裝' : '輕裝'), fl = F(700, FS.label), nm = shortOf(r);
+        while (tw(nm, fl) > PWp && nm.length > 2) nm = nm.slice(0, -2) + '…';
+        y += 6 + FS.label * 1.05;
+        b.text(nm, sx(0), y, fl, K.ink, 'left');   // the route's name above its band
+        y += 4;
+        var top = y;
+        b.draw(function (g) {
+          r.p.cls.forEach(function (c, k) { var a0 = k * 100, b0 = Math.min(r.p.len, a0 + 100); g.fillStyle = GC[c]; g.fillRect(sx(a0), top, sx(b0) - sx(a0) + 0.3, SH); });
+          g.fillStyle = heavy ? K.heavy : K.lightBar; g.fillRect(sx(0), top + SH + 3, sx(r.p.len) - sx(0), LH);
+        });
+        b.text(txt, sx(0) + 4, top + SH + 3 + LH * 0.76, F(700, FS.axis), heavy ? '#ffffff' : K.ink, 'left');
+        y = top + SH + 3 + LH;
+      });
+      y += 13;
+      xAxis(b, y);
+      b.h = y + 6;
+      return b;
+    }
+
+    // ---- grade classes: km and share of each route ----
+    function blockTable(rs, first) {
+      var b = mk(), y = secHead(b, 0, _t('坡度分級與各級距離') + (first ? '' : _t('（續）')), _t('依路線里程計算'));
+      var f = F(400, FS.table), fbd = F(700, FS.table), lh = FS.table * 1.95, cS = X0, cN = X0 + 32;
+      var wN = Math.max.apply(null, CLS_NAME.map(function (q) { return tw(_t(q), f); })), cR = cN + wN + 12;   // columns sized to the longest class and grade text
+      var wR = Math.max.apply(null, CLS_RANGE.map(function (q) { return tw(_t(q), f); }));
+      var cw = Math.min(112, (CW - (cR + wR + 14 - X0)) / rs.length), L0 = X0 + CW - cw * rs.length;
+      y += FS.table * 1.1;
+      // route names over their columns: the first may use the free space to its left; longer names wrap onto a second line
+      var free0 = Math.max(0, L0 - (cR + wR + 14)), lhH = FS.table * 1.35;
+      var heads = rs.map(function (r, j) {
+        var wmax = cw - 6 + (j === 0 ? free0 : 0), Ls = wrap(shortOf(r), f, wmax);
+        if (Ls.length > 2) { Ls = Ls.slice(0, 2); while (tw(Ls[1] + '…', f) > wmax && Ls[1].length > 1) Ls[1] = Ls[1].slice(0, -1); Ls[1] = Ls[1].replace(/\s+$/, '') + '…'; }
+        return Ls;
+      });
+      var nL = Math.max.apply(null, heads.map(function (Ls) { return Ls.length; })), yb = y + lhH * (nL - 1);
+      b.text(_t('分級'), cN, yb + FS.table * 0.6, f, K.ink2); b.text(_t('坡度'), cR, yb + FS.table * 0.6, f, K.ink2);
+      rs.forEach(function (r, j) {
+        var xr = L0 + cw * (j + 1) - 2, Ls = heads[j], y0 = yb - lhH * (Ls.length - 1);
+        Ls.forEach(function (ln, k) { b.text(ln, xr, y0 + lhH * k, f, K.ink2, 'right'); });
+        b.text(km1(r.p.len) + ' km', xr, yb + lhH, f, K.muted, 'right');
+      });
+      y = yb + FS.table * 1.9;
+      var yl = y; b.draw(function (g) { g.fillStyle = K.line; g.fillRect(X0, yl, CW, 0.6); });
+      function cells(yy, j, km, pct, bold) { var xr = L0 + cw * (j + 1) - 2, ff = bold ? fbd : f; b.text(km1(km) + ' km', xr - cw * 0.42, yy, ff, K.ink, 'right'); b.text(Math.round(pct) + '%', xr, yy, ff, K.ink, 'right'); }
+      for (var c = 6; c >= 0; c--) {
+        var yy = y + lh * 0.68, top = y + lh * 0.18;
+        (function (c, top) { b.draw(function (g) { g.fillStyle = GC[c]; if (g.roundRect) { g.beginPath(); g.roundRect(cS + 1, top, 24, lh * 0.64, 2); g.fill(); } else g.fillRect(cS + 1, top, 24, lh * 0.64); }); })(c, top);
+        b.text(_t(CLS_NAME[c]), cN, yy, f, K.ink); b.text(_t(CLS_RANGE[c]), cR, yy, f, K.ink);
+        rs.forEach(function (r, j) { cells(yy, j, r.p.ckm[c], r.p.ckm[c] / r.p.len * 100); });
+        y += lh;
+      }
+      var yt = y + 1; b.draw(function (g) { g.fillStyle = K.line; g.fillRect(X0, yt, CW, 0.6); });
+      y += lh * 0.72;
+      b.text(_t('坡度 20% 或更陡（上＋下）合計'), cN, y, fbd, K.ink);
+      rs.forEach(function (r, j) { var k20 = r.p.ckm[6] + r.p.ckm[0]; cells(y, j, k20, k20 / r.p.len * 100, true); });
+      y += 6;
+      b.h = y + 2;
+      return b;
+    }
+    function blockTableNotes(rs) {
+      var b = mk(), y = 0, f = F(400, FS.body), lh = FS.body * 1.65, notes = [];
+      if (!rs.length) return null;
+      var plan = rs.filter(function (r) { return !r.recorded; }).map(shortOf), EN1 = LANG === 'en';
+      notes.push(!plan.length ? _t('各欄都是實走紀錄。') : EN1 && plan.length > 1
+        ? listOf(plan) + ' are planned routes. Planned routes often cut across switchbacks, so they come out shorter and steeper.'
+        : _f('{0} 是規劃路線：規劃路線常把之字形拉直，距離偏短、坡度偏陡。', listOf(plan)));
+      // English puts the figure first and the name in parentheses, so names with commas or dates stay readable
+      function pct(r, w) { var up = r.p.net >= 0, v = up ? r.p['s' + w + 'u'] : r.p['s' + w + 'd']; if (v === null) return null; var n = (up ? '' : '−') + Math.round(v) + '%'; return EN1 ? n + ' (' + shortOf(r) + ')' : shortOf(r) + ' ' + n; }
+      var a = rs.map(function (r) { return pct(r, 300); }).filter(Boolean), c = rs.map(function (r) { return pct(r, 1000); }).filter(Boolean);
+      if (a.length) notes.push(EN1 ? 'Steepest 300 m: ' + a.join(', ') + '.' + (c.length ? ' Steepest 1 km: ' + c.join(', ') + '.' : '')
+        : _f('最陡的 300 m：{0}', a.join('、')) + (c.length ? _f('；最陡的 1 km：{0}', c.join('、')) : '') + '。');
+      notes.forEach(function (s) { y = b.para(s, f, K.ink2, lh, X0, CW, y); });
+      b.h = y + 4;
+      return b;
+    }
+
+    // ---- data notes and the user's notes ----
+    function blockData() {
+      var b = mk(), y = 0, f = F(400, FS.body), lh = FS.body * 1.65;
+      var t = _t('資料：距離依各 GPX 量測（實走紀錄先去除停留時的 GPS 漂移）；高度用 GPX 的紀錄，GPX 缺高度的地方用內政部 20 m DTM 補上；每 20 m 一點、三點平均；坡度每 100 m 一格。');
+      var sc = all.filter(function (r) { return r.p.scaled; }).map(function (r) { return _f('{0} 依實際距離 {1} km 校正（GPX {2} km）', r.name, km1(r.p.len), km2(r.p.raw)); });
+      if (sc.length) t += sc.join(_t('；')) + _t('。');
+      var dt = all.filter(function (r) { return r.p.src !== 'gpx'; }).map(function (r) { return r.name; });
+      if (dt.length) t += _f('{0} 的高度由 DTM 補上。', listOf(dt));
+      y = b.para(t, f, K.ink2, lh, X0, CW, y);
+      if (D.note) { y += 4; y = b.para(D.note, F(400, FS.legend), K.ink, FS.legend * 1.6, X0, CW, y); }
+      b.h = y + 4;
+      return b;
+    }
+
+    // ---- assemble and paginate ----
+    var head = blockHeader(), contentH = BOTY - TOPY - FOOT, legend = blockLegend(), PHc;
+    if (LAND) { var probe = blockProfile(300); PHc = clamp(contentH - head.h - GAP - (probe.h - 300) - (legend ? legend.h + GAP : 0) - 4, 230, 430); }
+    else PHc = 255;
+    var prof1 = blockProfile(PHc), b11 = block11(), tr = all.filter(inTable), per = LAND ? 7 : 4;
+    var notes = [blockRouteNote(M)].concat(comps.map(blockRouteNote)), tail = [blockBands()];
+    for (var t0 = 0; t0 < tr.length; t0 += per) tail.push(blockTable(tr.slice(t0, t0 + per), t0 === 0));
+    tail.push(blockTableNotes(tr), blockData());
+    function order() { return (LAND ? [head, prof1, legend].concat(notes, [b11], tail) : [head, b11, prof1, legend].concat(notes, tail)).filter(Boolean); }
+    function paginate(list) {
+      var out = [], cur = null, y = 0;
+      function newPage() { cur = []; out.push(cur); y = TOPY + (out.length > 1 ? RUN : 0); }
+      newPage();
+      list.forEach(function (bk) {
+        if (y + bk.h > BOTY - FOOT && cur.length) newPage();
+        cur.push({ bk: bk, y: y });
+        y += bk.h + GAP;
+      });
+      return out;
+    }
+    var pages = paginate(order());
+    if (!LAND) {
+      var fewest = { n: pages.length, ph: PHc };
+      [235, 215, 195, 175].forEach(function (ph) { prof1 = blockProfile(ph); var n = paginate(order()).length; if (n < fewest.n) fewest = { n: n, ph: ph }; });
+      PHc = fewest.ph; prof1 = blockProfile(PHc); pages = paginate(order());
+      pages.forEach(function (pg) {   // then let the profile take the room left on its own page
+        if (!pg.some(function (e) { return e.bk === prof1; })) return;
+        var last = pg[pg.length - 1], room = BOTY - FOOT - (last.y + last.bk.h), grow = Math.min(room - 8, 430 - PHc);
+        if (grow > 24) { PHc += grow; prof1 = blockProfile(PHc); }
+      });
+      pages = paginate(order());
+    }
+    var N = pages.length, foot = _t('路線剖面比較 © 2026 shainyhsu');
+    return {
+      W: PWd, H: PHd, n: N, EX: prof1.EX,
+      paint: function (cv, i, k) {
+        cv.width = Math.round(PWd * k); cv.height = Math.round(PHd * k);
+        var g = cv.getContext('2d');
+        g.setTransform(k, 0, 0, k, 0, 0); g.fillStyle = K.bg; g.fillRect(0, 0, PWd, PHd);
+        if (i > 0) {   // running head on the following pages
+          g.font = F(400, FS.sub); g.fillStyle = K.ink2; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+          var rt = D.title + _t('（續）'); while (tw(rt, F(400, FS.sub)) > CW && rt.length > 4) rt = rt.slice(0, -4) + '…' + _t('（續）');
+          g.fillText(rt, X0, TOPY + 9); g.fillStyle = K.line; g.fillRect(X0, TOPY + 14, CW, 0.6);
+        }
+        pages[i].forEach(function (e) { g.save(); g.translate(0, e.y); e.bk.ops.forEach(function (f) { g.save(); f(g); g.restore(); }); g.restore(); });
+        g.fillStyle = K.line; g.fillRect(X0, BOTY - FOOT + 4, CW, 0.6);
+        g.font = F(400, FS.foot); g.fillStyle = K.ink2; g.textBaseline = 'alphabetic';
+        g.textAlign = 'left'; g.fillText(foot, X0, BOTY - 2);
+        if (N > 1) { g.textAlign = 'right'; g.fillText(LANG === 'en' ? 'Page ' + (i + 1) + ' of ' + N : (i + 1) + '／' + N, X0 + CW, BOTY - 2); }
+        return cv;
+      }
+    };
+  }
+
+  // ================= page: routes list =================
+  var OPEN = {};
+  function colorMem() { try { return JSON.parse(lsGet('rpc.colors') || '{}') || {}; } catch (e) { return {}; } }
+  function remember(r) { var m = colorMem(); m[r.name] = r.color; lsSet('rpc.colors', JSON.stringify(m)); }
+  function freeColor(want) {
+    var used = ROUTES.map(function (r) { return r.color; });
+    if (want >= 0 && want < PAL.length && used.indexOf(want) < 0) return want;
+    for (var i = 0; i < PAL.length; i++) if (used.indexOf(i) < 0) return i;
+    return 0;
+  }
+  function addParsed(parsed, fileName) {
+    if (ROUTES.length >= MAXR) throw new Error(_t('最多 7 條路線（含主路線）；要比更多，請分成兩張圖。'));
+    var r = newRoute(parsed, fileName), m = colorMem();
+    r.color = freeColor(has(m, r.name) ? m[r.name] : (ROUTES.length ? -1 : 0));
+    ROUTES.push(r);
+    return r;
+  }
+  function err(msg) { var e = $('fileError'); e.textContent = msg || ''; e.hidden = !msg; }
+  function addFiles(list) {
+    var files = Array.prototype.slice.call(list || []);
+    if (!files.length) return;
+    err('');
+    var msgs = [];
+    files.reduce(function (pr, f) {
+      return pr.then(function () {
+        if (ROUTES.length >= MAXR) { msgs.push(_f('{0} 沒有加入：{1}', f.name, _t('最多 7 條路線（含主路線）；要比更多，請分成兩張圖。'))); return; }
+        return readFile(f).then(function (p) { addParsed(p, f.name); }, function (e) { msgs.push(_f('{0} 沒有加入：{1}', f.name, e.message || e)); });
+      });
+    }, Promise.resolve()).then(function () {
+      if (msgs.length) err(msgs.join('\n'));
+      if (!S.title && mainR()) $('cTitle').placeholder = mainR().name;
+      renderList(); refresh();
+    });
+  }
+  function paren(t) { return LANG === 'en' ? ' (' + t + ')' : '（' + t + '）'; }
+  function slash() { return LANG === 'en' ? '/' : '／'; }
+  function listOf(a) {   // 甲、乙、丙 / "A, B, and C" (semicolons when a name has a comma)
+    if (LANG !== 'en') return a.join('、');
+    if (a.length < 2) return a.join('');
+    if (a.some(function (s) { return /,/.test(s); })) return a.slice(0, -1).join('; ') + '; and ' + a[a.length - 1];
+    return a.length === 2 ? a[0] + ' and ' + a[1] : a.slice(0, -1).join(', ') + ', and ' + a[a.length - 1];
+  }
+  function lineTile(r, isMain, cls) {   // white tile with the line as drawn on the card (colour, dash, edge)
+    var c = PAL[r.color >= 0 ? r.color : 0], d = dashOf(r, isMain), dash = DASHES[d].map(function (v) { return Math.max(v * 1.4, 0.01); }).join(' '), cap = /dot/.test(d) ? 'round' : 'butt';
+    return '<svg class="' + cls + '" viewBox="0 0 34 34" aria-hidden="true"><rect x=".75" y=".75" width="32.5" height="32.5" rx="7" fill="#fff" stroke="#9aa59e" stroke-width="1.5"/>' +
+      (edged(c) ? '<path d="M6 17H28" stroke="#16201a" stroke-width="5" stroke-dasharray="' + dash + '" stroke-linecap="' + cap + '"/>' : '') +
+      '<path d="M6 17H28" stroke="' + c + '" stroke-width="3.2" stroke-dasharray="' + dash + '" stroke-linecap="' + cap + '"/></svg>';
+  }
+  function metaHtml(r) {
+    if (!r.p) return '';
+    if (r.p.err) return '<span class="tag" style="color:var(--crit);background:var(--crit-bg);white-space:normal">' + esc(_t('這條路線沒有高度資料，這裡也讀不到 DTM，畫不出剖面。')) + '</span>';
+    var bar = LANG === 'en' ? ' | ' : '｜', p = r.p, t = km1(p.len) + ' km' + bar + '+' + nf(p.up) + slash() + '−' + nf(p.dn) + ' m' + bar + nf(p.z0) + ' → ' + nf(p.z1) + ' m';
+    var tags = [];
+    if (r === mainR()) tags.push(_t('主路線'));
+    tags.push(_t(r.recorded ? '實走紀錄' : '規劃路線'));
+    tags.push(_t(p.src === 'gpx' ? 'GPX 高度' : p.src === 'dtm' ? 'DTM 高度' : 'DTM 補高度'));
+    if (p.scaled) tags.push(_t('距離校正'));
+    return esc(t) + ' ' + tags.map(function (s) { return '<span class="tag">' + esc(s) + '</span>'; }).join('');
+  }
+  var TRASH = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.75 4.25h10.5"/><path d="M6.25 4.25V2.9a.65.65 0 0 1 .65-.65h2.2a.65.65 0 0 1 .65.65v1.35"/><path d="M4 4.25l.6 8.6a1.25 1.25 0 0 0 1.25 1.15h4.3a1.25 1.25 0 0 0 1.25-1.15l.6-8.6"/></svg>';
+  function fmtKm(v) { return v === null || v === undefined || v === '' ? '' : String(Math.round(v * 100) / 100); }
+  function renderList() {
+    var box = $('rts'), M = mainR(), th = PAL;
+    if (!ROUTES.length) { box.innerHTML = ''; return; }
+    box.innerHTML = ROUTES.map(function (r, ri) {
+      var b = base(r), isM = r === M;
+      var opts = '<option value="" disabled hidden>—</option><option value="s">' + esc(_t('起點')) + ' 0.0 km</option>' + b.wp.map(function (w) { return '<option value="' + esc(w.id) + '">' + esc((has(r.o.ptNames, w.id) ? r.o.ptNames[w.id] : w.name) || '·') + ' ' + km1(w.d) + ' km</option>'; }).join('') + '<option value="e">' + esc(_t('終點')) + ' ' + km1(b.total) + ' km</option>';
+      var colors = PAL.map(function (c, i) {
+        var u = ROUTES.filter(function (q) { return q !== r && q.color === i; })[0];
+        return '<button type="button" data-act="color" data-c="' + i + '" class="' + (edged(th[i]) ? 'edge' : '') + '" style="background:' + th[i] + '" aria-pressed="' + (r.color === i) + '" title="' + esc(_t(PAL_NAME[i]) + (u ? paren(_f('已被「{0}」使用', u.name)) : '')) + '" aria-label="' + esc(_t(PAL_NAME[i])) + '"></button>';
+      }).join('');
+      var ptsHtml = '';
+      if (r.p && !r.p.err) {
+        var plist = r.p.mid.map(function (m) { return { id: m.id, name: m.name, x: m.x, show: m.show }; });
+        if (isM && r.p.maxQ && !r.p.maxDup) plist.push({ id: 'max', name: r.p.maxName, x: r.p.maxAt, show: r.p.maxShow });
+        plist.sort(function (p1, p2) { return p1.x - p2.x; });
+        ptsHtml = plist.map(function (m) {
+          return '<div class="pt"><input type="checkbox" data-k="ptShow" data-w="' + esc(m.id) + '"' + (m.show ? ' checked' : '') + ' aria-label="' + esc(m.name) + '"><input type="text" data-k="ptName" data-w="' + esc(m.id) + '" value="' + esc(m.name) + '"><span class="km">' + km1(m.x) + ' km</span></div>';
+        }).join('');
+      }
+      var dashSel = isM ? '' : '<label class="field">' + esc(_t('線型')) + '<select data-k="dash">' + DASH_NAME.map(function (o) { return '<option value="' + o[0] + '"' + ((r.o.dash || 'auto') === o[0] ? ' selected' : '') + '>' + esc(_t(o[1])) + (o[0] === 'auto' ? paren(esc(_t(DASH_NAME.filter(function (q) { return q[0] === AUTO_DASH[r.color >= 0 ? r.color : 0]; })[0][1]))) : '') + '</option>'; }).join('') + '</select></label>';
+      var loadSel = '<div class="setrow"><span>' + esc(_t('揹負')) + '</span><div class="inline"><select data-k="loadType" aria-label="' + esc(_t('揹負')) + '">' + [['none', '不標示'], ['heavy', '重裝'], ['light', '輕裝']].map(function (o) { return '<option value="' + o[0] + '"' + ((r.o.loadType || 'none') === o[0] ? ' selected' : '') + '>' + esc(_t(o[1])) + '</option>'; }).join('') + '</select>' +
+        '<input type="text" class="grow" data-k="loadText" value="' + esc(r.o.loadText || '') + '" placeholder="' + esc(_t('例如：揹 13 kg')) + '" aria-label="' + esc(_t('揹負')) + '"></div><p class="hint">' + esc(_t('標了揹負的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」。')) + '</p></div>';
+      return '<div class="rt' + (isM ? ' main' : '') + '" data-id="' + r.id + '">' +
+        '<div class="rt-head">' + lineTile(r, isM, 'rt-sw') + '<input class="nm" type="text" data-k="name" value="' + esc(r.name) + '" aria-label="' + esc(_t('路線名稱')) + '">' +
+        '<button type="button" class="iconbtn" data-act="del" aria-label="' + esc(_t('移除這條路線')) + '" title="' + esc(_t('移除這條路線')) + '">' + TRASH + '</button></div>' +
+        '<p class="rt-meta">' + metaHtml(r) + '</p>' +
+        (isM ? '' : '<div class="rt-acts"><button type="button" class="btn ghost" data-act="main">' + esc(_t('設為主路線')) + '</button></div>') +
+        '<details class="disc" data-open="' + r.id + '"' + (OPEN[r.id] ? ' open' : '') + '><summary>' + esc(_t('調整：範圍、名稱、線色、揹負、備註')) + '</summary><div class="adj">' +
+          '<div class="inline">' + esc(_t('範圍')) + ' ' + esc(_t('從')) + ' <select data-k="fromSel" aria-label="' + esc(_t('從')) + '">' + opts + '</select> ' + esc(_t('到')) + ' <select data-k="toSel" aria-label="' + esc(_t('到')) + '">' + opts + '</select></div>' +
+          '<div class="inline">' + esc(_t('或')) + ' <input type="number" data-k="from" step="0.1" min="0" inputmode="decimal" value="' + fmtKm(r.o.from) + '" placeholder="0" aria-label="km"> km ' + esc(_t('到')) + ' <input type="number" data-k="to" step="0.1" min="0" inputmode="decimal" value="' + fmtKm(r.o.to) + '" placeholder="' + km1(b.total) + '" aria-label="km"> km <button type="button" class="btn ghost" data-act="full">' + esc(_t('全段')) + '</button> <span class="hint">' + esc(_f('GPX 全長 {0} km', km2(b.total))) + '</span></div>' +
+          '<label class="ck"><input type="checkbox" data-k="rev"' + (r.o.rev ? ' checked' : '') + '>' + esc(_t('反轉方向')) + '</label>' +
+          (r.recorded ? '<label class="ck"><input type="checkbox" data-k="dej"' + (r.o.dej ? ' checked' : '') + '>' + esc(_t('去除停留時的 GPS 漂移（實走紀錄）')) + '</label>' : '') +
+          '<div class="inline">' + esc(_t('實際距離')) + ' <input type="number" data-k="real" step="0.1" min="0" inputmode="decimal" value="' + fmtKm(r.o.real) + '" aria-label="' + esc(_t('實際距離')) + '"> km</div><p class="hint">' + esc(_t('留白＝用 GPX 量的距離；填里程樁的距離就等比例校正')) + '</p>' +
+          (isM ? '<label class="field">' + esc(_t('起點名稱')) + '<input type="text" data-k="startName" value="' + esc(r.o.startName) + '" placeholder="' + esc(r.p && !r.p.err ? r.p.startName : _t('起點')) + '"></label>' : '') +
+          '<label class="field">' + esc(_t('終點名稱')) + '<input type="text" data-k="endName" value="' + esc(r.o.endName) + '" placeholder="' + esc(r.p && !r.p.err ? r.p.endName : '') + '"></label>' +
+          '<label class="field">' + esc(_t('簡稱（表格、坡度帶用）')) + '<input type="text" data-k="short" value="' + esc(r.o.short || '') + '" placeholder="' + esc(shortOf(r)) + '"></label>' +
+          '<div class="setrow"><span>' + esc(_t('線色')) + '</span><div class="colors">' + colors + '</div></div>' + dashSel + loadSel +
+          '<label class="ck"><input type="checkbox" data-k="inTable"' + (inTable(r) ? ' checked' : '') + '>' + esc(_t('列入坡度分級表')) + '</label>' +
+          (ptsHtml ? '<div class="setrow"><span>' + esc(_t('圖上的點')) + '</span><div class="pts">' + ptsHtml + '</div>' + (isM ? '' : '<p class="hint">' + esc(_t('勾選的點會標在比較線上，附實際海拔。')) + '</p>') + '</div>' : '') +
+          '<label class="field">' + esc(_t('備註（放在圖例下方）')) + '<textarea data-k="note" rows="3" placeholder="' + esc(_t('以「・」開頭的行是條列，其他行是小標題')) + '">' + esc(r.o.note || '') + '</textarea></label>' +
+        '</div></details></div>';
+    }).join('');
+    ROUTES.forEach(function (r) {   // the range selects show the waypoint at each end, if one is there
+      var el = box.querySelector('.rt[data-id="' + r.id + '"]'); if (!el) return;
+      var b = base(r), fs = el.querySelector('[data-k=fromSel]'), ts = el.querySelector('[data-k=toSel]');
+      function pick(v, end) { if (v === null) return end ? 'e' : 's'; var w = b.wp.filter(function (q) { return Math.abs(q.d - v * 1000) < 15; })[0]; return w ? w.id : ''; }
+      fs.value = pick(r.o.from, false); ts.value = pick(r.o.to, true);
+    });
+  }
+  function updateMeta() {
+    ROUTES.forEach(function (r) { var el = document.querySelector('.rt[data-id="' + r.id + '"] .rt-meta'); if (el) el.innerHTML = metaHtml(r); });
+  }
+  function byEl(el) { var rt = el.closest('.rt'); if (!rt) return null; var id = +rt.getAttribute('data-id'); return ROUTES.filter(function (r) { return r.id === id; })[0] || null; }
+  function wpKm(r, v) { if (v === 's') return null; if (v === 'e') return null; var w = base(r).wp.filter(function (q) { return q.id === v; })[0]; return w ? Math.round(w.d) / 1000 : null; }
+  function onListInput(ev) {
+    var el = ev.target, r = byEl(el), k = el.getAttribute('data-k'); if (!r || !k) return;
+    if (k === 'name') { r.name = el.value; remember(r); }
+    else if (k === 'startName' || k === 'endName' || k === 'short' || k === 'loadText' || k === 'note') r.o[k] = el.value;
+    else if (k === 'from' || k === 'to' || k === 'real') { var v = num(el.value); r.o[k] = v !== null && v >= 0 ? v : null; if (k === 'real' && !(v > 0)) r.o.real = null; }
+    else if (k === 'ptName') r.o.ptNames[el.getAttribute('data-w')] = el.value;
+    else return;
+    refresh(true);
+  }
+  function onListChange(ev) {
+    var el = ev.target, r = byEl(el), k = el.getAttribute('data-k'); if (!r || !k) return;
+    if (k === 'rev') { r.o.rev = el.checked; r.o.from = r.o.to = null; }
+    else if (k === 'dej') { r.o.dej = el.checked; r.o.from = r.o.to = null; }
+    else if (k === 'fromSel') r.o.from = el.value === 's' ? null : wpKm(r, el.value);
+    else if (k === 'toSel') r.o.to = el.value === 'e' ? null : wpKm(r, el.value);
+    else if (k === 'ptShow') r.o.ptShow[el.getAttribute('data-w')] = el.checked;
+    else if (k === 'dash' || k === 'loadType') r.o[k] = el.value;
+    else if (k === 'inTable') r.o.inTable = el.checked;
+    else return;
+    refresh(); renderSoon();
+  }
+  function onListClick(ev) {
+    var bt = ev.target.closest('[data-act]'); if (!bt) return;
+    var r = byEl(bt), act = bt.getAttribute('data-act'); if (!r) return;
+    if (act === 'del') { ROUTES = ROUTES.filter(function (q) { return q !== r; }); }
+    else if (act === 'main') { ROUTES = [r].concat(ROUTES.filter(function (q) { return q !== r; })); }
+    else if (act === 'full') { r.o.from = r.o.to = null; }
+    else if (act === 'color') {
+      var c = +bt.getAttribute('data-c'), other = ROUTES.filter(function (q) { return q !== r && q.color === c; })[0];
+      if (other) { other.color = r.color; remember(other); }
+      r.color = c; remember(r);
+    }
+    renderList(); refresh();
+  }
+  var renderSoon = debounce(renderList, 30);
+
+  // ================= compute, DTM, preview =================
+  var dtmMsg = '';
+  function computeAll() { ROUTES.forEach(function (r) { r.p = prof(r); }); }
+  function ensureDtm() {
+    var st = $('dtmStatus'), need = {};
+    ROUTES.forEach(function (r) { var b = base(r); if (!b.gaps) return; for (var i = 0; i < b.P.length; i++) if (!b.hasE[i] || !b.hasE[Math.max(0, i - 1)] || !b.hasE[Math.min(b.P.length - 1, i + 1)]) needTiles(need, b.P[i][0], b.P[i][1]); });
+    if (!Object.keys(need).length) { st.textContent = ''; return; }
+    var miss = Object.keys(need).filter(function (k) { return !TILE[k]; });
+    if (miss.length) {
+      st.textContent = _f('讀取 DTM 地形圖磚（{0} 張）…', miss.length);
+      loadTiles(need).then(function () { refresh(); });
+      return;
+    }
+    var dt = ROUTES.filter(function (r) { return r.p && !r.p.err && r.p.src !== 'gpx'; }).map(function (r) { return r.name; });
+    st.textContent = dt.length ? _f('{0} 的 GPX 缺高度，已用內政部 20 m DTM 補上。', listOf(dt)) : '';
+  }
+  function cardData() {
+    var M = mainR(); if (!M || !M.p || M.p.err) return null;
+    return { main: M, comps: ROUTES.slice(1).filter(function (r) { return r.p && !r.p.err; }),
+             title: S.title || M.name, sub: S.sub, note: S.note };
+  }
+  function drawPreview() {
+    var D = cardData(), box = $('pages'), em = $('prevEmpty');
+    $('btnSave').disabled = !D; $('btnShare').disabled = !D;
+    if (!D) { box.innerHTML = ''; box.hidden = true; em.hidden = false; $('outInfo').textContent = ''; $('btnSave').lastChild.nodeValue = _t('下載 JPG'); return; }
+    var doc = buildDoc(D, S.ori), dpr = Math.min(2, window.devicePixelRatio || 1), wcss = Math.max(240, box.clientWidth || $('prev').clientWidth || 600);
+    if (window.matchMedia && window.matchMedia('(min-width: 980px)').matches) wcss = Math.max(240, Math.min(wcss, Math.floor(Math.max(420, window.innerHeight - 170) * doc.W / doc.H)));
+    while (box.children.length > doc.n) box.removeChild(box.lastChild);
+    while (box.children.length < doc.n) box.appendChild(document.createElement('canvas'));
+    for (var i = 0; i < doc.n; i++) { var cv = box.children[i]; doc.paint(cv, i, wcss * dpr / doc.W); cv.style.width = wcss + 'px'; cv.setAttribute('aria-label', _f('第 {0} 頁', i + 1)); }
+    box.hidden = false; em.hidden = true;
+    var w = Math.round(doc.W * PT2PX), h = Math.round(doc.H * PT2PX);
+    $('outInfo').textContent = _f(S.ori === 'p' ? 'A4 直式・{0} 頁・{1} × {2} px・300 dpi' : 'A4 橫式・{0} 頁・{1} × {2} px・300 dpi', LANG === 'en' ? (doc.n === 1 ? '1 page' : doc.n + ' pages') : doc.n, nf(w), nf(h));
+    $('btnSave').lastChild.nodeValue = doc.n > 1 ? _f('下載 JPG（{0} 頁）', doc.n) : _t('下載 JPG');
+  }
+  var drawSoon = debounce(drawPreview, 60);
+  var saveSoon = debounce(saveState, 500);
+  function refresh(soft) {
+    computeAll();
+    ensureDtm();
+    if (soft) updateMeta(); else updateMeta();
+    drawSoon(); saveSoon();
+  }
+
+  // ================= export: JPG at 300 dpi =================
+  var DL = null, IN_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
+  if (IN_CLAUDE) { try { window.claude.use('downloads').then(function (d) { DL = d; }, function () { DL = null; }); } catch (e) { DL = null; } }
+  function setDpi(blob, dpi) {   // JFIF density: dots per inch
+    return blob.arrayBuffer().then(function (b) {
+      var u = new Uint8Array(b);
+      if (u[0] === 0xFF && u[1] === 0xD8 && u[2] === 0xFF && u[3] === 0xE0 && u[6] === 0x4A && u[7] === 0x46 && u[8] === 0x49 && u[9] === 0x46 && u[10] === 0) {
+        u[13] = 1; u[14] = dpi >> 8; u[15] = dpi & 255; u[16] = dpi >> 8; u[17] = dpi & 255;
+      }
+      return new Blob([u], { type: 'image/jpeg' });
+    });
+  }
+  function fileName(i, n) {
+    var t = String(S.title || (mainR() && mainR().name) || 'route').replace(/[\\/:*?"<>|\s]+/g, '_').replace(/_+/g, '_').slice(0, 60);
+    return _t('路線剖面比較').replace(/\s+/g, '_') + '_' + t + '_' + _t(S.ori === 'p' ? '直式' : '橫式') + (n > 1 ? _f('_第{0}頁', i + 1) : '') + '.jpg';
+  }
+  function makeJpgs() {   // A4 at 300 dpi: 2,480 × 3,508 px a page
+    var D = cardData(); if (!D) return Promise.reject(new Error('no data'));
+    var doc = buildDoc(D, S.ori), out = [], chain = Promise.resolve();
+    for (var i = 0; i < doc.n; i++) (function (i) {
+      chain = chain.then(function () {
+        var cv = doc.paint(document.createElement('canvas'), i, PT2PX);
+        return new Promise(function (ok, no) { cv.toBlob(function (b) { b ? ok(b) : no(new Error('toBlob')); }, 'image/jpeg', 0.92); })
+          .then(function (b) { return setDpi(b, 300); })
+          .then(function (b) { out.push({ blob: b, name: fileName(i, doc.n), w: cv.width, h: cv.height }); cv.width = cv.height = 1; });
+      });
+    })(i);
+    return chain.then(function () { return out; });
+  }
+  function makeJpg() { return makeJpgs().then(function (a) { return a[0]; }); }
+  function msg(s) { $('saveMsg').textContent = s || ''; }
+  function saveAll(list) {   // one file after another; browsers may ask once to allow several downloads
+    var done = 0;
+    return list.reduce(function (pr, o, i) {
+      return pr.then(function (ok) { if (ok === false) return false; return new Promise(function (r) { setTimeout(r, i ? 700 : 0); }).then(function () { return saveBlob(o.blob, o.name, true); }).then(function (res) { if (res !== false) done++; return res; }); });
+    }, Promise.resolve(true)).then(function () { if (list.length > 1 && done === list.length) msg(_f('已存成 {0} 個檔案。', done)); });
+  }
+  function saveBlob(b, name, quiet) {
+    if (DL) {
+      return DL.save({ filename: name, data: b }).then(function () { msg(_f('已存成「{0}」。', name)); return true; }, function (e) { msg(e && e.code === 'declined' ? _t('已取消下載。') : _t('這個視窗不能下載。')); return false; });
+    }
+    if (IN_CLAUDE) { msg(_t('這個視窗不能下載。')); return Promise.resolve(false); }
+    var url = URL.createObjectURL(b), a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none'; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 2000);
+    msg(_f('已存成「{0}」。', name) + ' ' + nf(b.size / 1024) + ' KB');
+    return Promise.resolve(true);
+  }
+  function canShareFiles() {
+    if (IN_CLAUDE || !navigator.canShare || !navigator.share) return false;
+    try { return navigator.canShare({ files: [new File([new Uint8Array([255, 216, 255])], 'x.jpg', { type: 'image/jpeg' })] }); } catch (e) { return false; }
+  }
+
+  // ================= state =================
+  function saveState() {
+    var o = { v: 1, S: S, R: ROUTES.map(function (r) { return { name: r.name, file: r.file, recorded: r.recorded, color: r.color, sample: r.sample, o: r.o, pts: r.pts, wpts: r.wpts }; }) };
+    if (!lsSet('rpc.state', JSON.stringify(o))) lsSet('rpc.state', JSON.stringify({ v: 1, S: S, R: [] }));
+  }
+  function loadState() {
+    var j = null;
+    try { j = JSON.parse(lsGet('rpc.state') || 'null'); } catch (e) { j = null; }
+    if (!j || j.v !== 1) return false;
+    Object.keys(S).forEach(function (k) { if (j.S && has(j.S, k) && typeof j.S[k] === 'string') S[k] = j.S[k]; });
+    ROUTES = (j.R || []).filter(function (r) { return r && r.pts && r.pts.length > 1; }).map(function (r) {
+      return { id: SEQ++, name: r.name || 'GPX', file: r.file || '', recorded: !!r.recorded, color: r.color >= 0 && r.color < PAL.length ? r.color : 0, sample: r.sample, pts: r.pts, wpts: r.wpts || [],
+               o: (function (o) { var d = Object.assign(defOpts(), o || {}); if (o && o.ptHide) { Object.keys(o.ptHide).forEach(function (k) { if (o.ptHide[k]) d.ptShow[k] = false; }); delete d.ptHide; } return d; })(r.o) };
+    }).slice(0, MAXR);
+    return true;
+  }
+  var SAMPLE = null;
+  function sampleJ() { if (!SAMPLE) { try { SAMPLE = JSON.parse($('sampleData').textContent); } catch (e) { SAMPLE = []; } } return SAMPLE; }
+  var S_TITLE = '範例：桃山和其他路線', S_SUB = '範例資料取自步程試算的三個範例行程';
+  function loadSample() {
+    ROUTES = []; OPEN = {};
+    sampleJ().forEach(function (s, i) {
+      var r = addParsed({ name: LANG === 'en' ? s.nameEn : s.name, pts: s.pts.map(function (p) { return { lat: p[0], lon: p[1], ele: p[2], t: null }; }),
+                          wpts: s.wpts.map(function (w) { return { lat: w.lat, lon: w.lon, name: LANG === 'en' ? w.nameEn : w.name }; }) }, '');
+      r.sample = i;
+      r.color = i;   // palette order: black, vermilion, blue
+    });
+    S.title = _t(S_TITLE); S.sub = _t(S_SUB); S.note = '';
+    syncInputs();
+  }
+  function swapNames() {   // names the sample gave, in the current language; names the user typed stay
+    var J = sampleJ();
+    ROUTES.forEach(function (r) {
+      var s = r.sample >= 0 ? J[r.sample] : null; if (!s) return;
+      if (r.name === s.name || r.name === s.nameEn) r.name = LANG === 'en' ? s.nameEn : s.name;
+      r.wpts.forEach(function (w, i) { var q = s.wpts[i]; if (q && (w.name === q.name || w.name === q.nameEn)) w.name = LANG === 'en' ? q.nameEn : q.name; });
+    });
+    if (S.title === S_TITLE || S.title === EN[S_TITLE]) S.title = _t(S_TITLE);
+    if (S.sub === S_SUB || S.sub === EN[S_SUB]) S.sub = _t(S_SUB);
+  }
+  function syncInputs() {
+    $('cTitle').value = S.title; $('cSub').value = S.sub; $('cNote').value = S.note;
+    $('cTitle').placeholder = mainR() ? mainR().name : '';
+    ['ori'].forEach(function (k) { var el = document.querySelector('input[name="' + k + '"][value="' + S[k] + '"]'); if (el) el.checked = true; });
+  }
+  function twoStep(btn, warn, fn) {   // a second press within 4 s confirms
+    if (btn._arm) { clearTimeout(btn._arm); btn._arm = null; btn.classList.remove('arm'); btn.textContent = btn._txt; fn(); return; }
+    btn._txt = btn.textContent; btn.textContent = warn; btn.classList.add('arm');
+    btn._arm = setTimeout(function () { btn._arm = null; btn.classList.remove('arm'); btn.textContent = btn._txt; }, 4000);
+  }
+
+  // ================= wiring =================
+  function init() {
+    applyLang();
+    if (loadState()) swapNames(); else loadSample();   // first visit: the sample
+    syncInputs();
+    $('file').addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+    var card = $('routeCard');
+    card.addEventListener('dragover', function (e) { e.preventDefault(); card.classList.add('over'); });
+    card.addEventListener('dragleave', function () { card.classList.remove('over'); });
+    card.addEventListener('drop', function (e) { e.preventDefault(); card.classList.remove('over'); addFiles(e.dataTransfer && e.dataTransfer.files); });
+    $('btnSample').addEventListener('click', function () {
+      var go = function () { loadSample(); renderList(); refresh(); };
+      ROUTES.length ? twoStep(this, _t('再按一次，取代目前的路線'), go) : go();
+    });
+    $('btnClear').addEventListener('click', function () {
+      if (!ROUTES.length) return;
+      twoStep(this, _t('再按一次，移除全部路線'), function () { ROUTES = []; OPEN = {}; S.title = ''; S.sub = ''; S.note = ''; syncInputs(); renderList(); refresh(); });
+    });
+    var rts = $('rts');
+    rts.addEventListener('input', onListInput);
+    rts.addEventListener('change', onListChange);
+    rts.addEventListener('click', onListClick);
+    rts.addEventListener('toggle', function (e) { var d = e.target; if (d && d.getAttribute && d.getAttribute('data-open')) OPEN[d.getAttribute('data-open')] = d.open; }, true);
+    [['cTitle', 'title'], ['cSub', 'sub'], ['cNote', 'note']].forEach(function (q) { $(q[0]).addEventListener('input', function () { S[q[1]] = this.value; drawSoon(); saveSoon(); }); });
+    Array.prototype.forEach.call(document.querySelectorAll('input[name=ori]'), function (el) {
+      el.addEventListener('change', function () { if (this.checked) { S[this.name] = this.value; refresh(); } });
+    });
+    $('btnSave').addEventListener('click', function () {
+      var b = this; b.disabled = true; msg(_t('產生圖片中…'));
+      makeJpgs().then(saveAll).catch(function (e) { msg(String(e && e.message || e)); }).then(function () { b.disabled = false; });
+    });
+    if (canShareFiles()) {
+      $('btnShare').hidden = false;
+      $('btnShare').addEventListener('click', function () {
+        var b = this; b.disabled = true; msg(_t('產生圖片中…'));
+        makeJpgs().then(function (list) {
+          var fs = list.map(function (o) { return new File([o.blob], o.name, { type: 'image/jpeg' }); });
+          if (navigator.canShare({ files: fs })) return navigator.share({ files: fs, title: S.title || list[0].name }).then(function () { msg(_t('已開啟分享。')); }, function (e) { if (e && e.name === 'AbortError') msg(''); else { msg(_t('這個瀏覽器不能直接分享圖片，已改為下載。')); return saveAll(list); } });
+          msg(_t('這個瀏覽器不能直接分享圖片，已改為下載。')); return saveAll(list);
+        }).catch(function (e) { msg(String(e && e.message || e)); }).then(function () { b.disabled = false; });
+      });
+    }
+    $('langBtn').addEventListener('click', function () {
+      LANG = LANG === 'en' ? 'zh' : 'en'; lsSet('rpc.lang', LANG); applyLang();
+      swapNames();
+      ROUTES.forEach(function (r) { r._b = null; });
+      syncInputs(); computeAll(); renderList(); refresh();
+    });
+    window.addEventListener('resize', drawSoon);
+    computeAll(); renderList(); refresh();
+    var fonts = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 16px "Barlow Semi Condensed"'), document.fonts.load('500 16px "Barlow Semi Condensed"')]).catch(function () { return null; }) : Promise.resolve();
+    Promise.race([fonts, new Promise(function (ok) { setTimeout(ok, 2500); })]).then(drawPreview);
+  }
+  window.RPC = { buildDoc: buildDoc, cardData: cardData, makeJpg: makeJpg, makeJpgs: makeJpgs, routes: function () { return ROUTES; }, state: S, refresh: refresh, addParsed: function (p, n) { var r = addParsed(p, n); renderList(); refresh(); return r; }, parseXml: parseXml, version: VERSION };
+  init();
+})();
+
+</script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="63c8bf83-5826-4ce5-bda6-06b1946cbe8b"></script>
+<script>(function(){var r=document.documentElement,b=document.getElementById("themeToggle");if(!b)return;var SUN='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',MOON='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>';function sync(){var d=r.getAttribute("data-theme")!=="light";b.innerHTML=d?SUN:MOON;var l=d?"切換為淺色模式 / Light mode":"切換為深色模式 / Dark mode";b.title=l;b.setAttribute("aria-label",l)}b.addEventListener("click",function(){var n=r.getAttribute("data-theme")==="light"?"dark":"light";r.setAttribute("data-theme",n);try{localStorage.setItem("theme",n)}catch(e){}sync();try{window.dispatchEvent(new CustomEvent("themechange",{detail:n}))}catch(e){}});sync()})()</script>
+</body></html>

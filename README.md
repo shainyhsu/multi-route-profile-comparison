@@ -1,0 +1,38 @@
+# Multi-Route Profile Comparison (路線剖面比較)
+
+Put the distance–elevation profiles of several hiking routes on one chart and save it as A4 portrait or landscape JPG pages at 300 dpi.
+
+**Live demo:** https://shainyhsu.github.io/multi-route-profile-comparison/
+
+## Features
+
+- Load up to 7 GPX, KML or KMZ files; the first is the main route, shaded by grade every 100 m
+- Vertical axis is the elevation relative to the start: every line begins at 0 km and 0 m, so the chart compares steepness and length; actual elevations are written next to the place names (start, high point and end of the main route, end of every other route)
+- Elevations come straight from each GPX file; only points without elevation data are filled in from the Ministry of the Interior’s 20 m digital terrain model (Taiwan)
+- High-contrast line colors for screens, plus a distinct dash pattern for every comparison line so the chart still reads on a black-and-white laser printer; light colors get a dark outline, lines get a white edge where they cross the grade bands, and labels over the bands sit in framed boxes
+- Print layout: true-scale (1:1) profile, elevation profile with pack-load spans, legend, route notes, grade bands with pack loads, and a distance-by-grade table with the steepest 300 m and 1 km
+- A4 at 300 dpi (portrait 2,480 × 3,508 px, landscape 3,508 × 2,480 px) with 10 mm print margins; the landscape profile spans the full page width; longer content continues onto additional pages
+- Per route: section by waypoint or km, reverse, scale to the posted trail distance, names and short name, line color and style, pack load (full pack or daypack), grade-table option, notes, and which points to mark
+- Traditional Chinese / English interface (English uses official or established English place names and American usage); light/dark page (dark by default, shared with the other tools); the card itself is always light for printing and sharing
+- Two-column page layout on laptops and desktops
+
+## How to use
+
+1. Open the link above (fully client-side; files are not uploaded to a server)
+2. Add GPX or KML files, or try the sample
+3. Adjust each route and the card settings
+4. Download the JPG pages, or share them from a phone
+
+## Tech
+
+Single HTML page on GitHub Pages. No backend, no install. Terrain data: Ministry of the Interior 20 m grid digital terrain model; tiles converted by OsmHackTW terrain-rgb in 2023, released under the Open Government Data License (https://data.gov.tw/license).
+
+## License
+
+Copyright (c) 2026 Shainy Hsu. All rights reserved. You may use the published tool in your browser; copying, redistributing, scraping, or using any part of it to train AI models is not permitted without written permission. See [LICENSE](LICENSE).
+
+## Version history
+
+Newest first. Times are Taiwan time (UTC+8). Also kept in [CHANGELOG.md](CHANGELOG.md).
+
+- V1 | 2026-11-10 07:51 | First version: up to 7 GPX/KML routes on one profile, elevation relative to the start with actual elevations next to place names, GPX elevations with DTM filling gaps, high-contrast colors plus dash patterns for black-and-white printing, 1:1 profile, grade bands with pack loads, distance-by-grade table, A4 portrait/landscape JPG at 300 dpi with additional pages when needed, Chinese/English, light/dark page
