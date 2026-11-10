@@ -6,7 +6,7 @@ Put the distance–elevation profiles of several hiking routes on one chart and 
 
 ## Features
 
-- Load up to 7 GPX, KML or KMZ files; the first is the main route, shaded by grade every 100 m
+- Load any number of GPX, KML or KMZ files; the chart draws the top 10 (each route can also be left off the chart). The first is the main route, shaded by grade every 100 m; drag a route by its handle to reorder the list or make it the main route
 - Vertical axis is the elevation relative to the start: every line begins at 0 km and 0 m, so the chart compares steepness and length; actual elevations are written next to the place names (start, high point and end of the main route, end of every other route)
 - Elevations come straight from each GPX file; only points without elevation data are filled in from the Ministry of the Interior’s 20 m digital terrain model (Taiwan)
 - High-contrast line colors for screens, plus a distinct dash pattern for every comparison line so the chart still reads on a black-and-white laser printer; light colors get a dark outline, lines get a white edge where they cross the grade bands, and labels over the bands sit in framed boxes
@@ -35,4 +35,5 @@ Copyright (c) 2026 Shainy Hsu. All rights reserved. You may use the published to
 
 Newest first. Times are Taiwan time (UTC+8). Also kept in [CHANGELOG.md](CHANGELOG.md).
 
+- V2 | 2026-11-10 09:35 | Route limit raised: add more than 10 GPX files and the chart draws the top 10 (with a per-route Show on the chart option); the sample routes make way for the first files you add; drag routes by the numbered handle to reorder or change the main route; three more line colors and dash styles for 10 lines
 - V1 | 2026-11-10 07:51 | First version: up to 7 GPX/KML routes on one profile, elevation relative to the start with actual elevations next to place names, GPX elevations with DTM filling gaps, high-contrast colors plus dash patterns for black-and-white printing, 1:1 profile, grade bands with pack loads, distance-by-grade table, A4 portrait/landscape JPG at 300 dpi with additional pages when needed, Chinese/English, light/dark page

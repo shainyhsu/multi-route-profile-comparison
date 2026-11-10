@@ -117,6 +117,15 @@ details.disc[open]>summary{margin-bottom:10px}
 .rt-head{display:flex;align-items:center;gap:8px;min-width:0}
 .rt-head .nm{flex:1 1 auto;min-height:42px;font-weight:700;font-size:16px;padding:.4rem .6rem}
 .rt-sw{flex:none;width:34px;height:34px;display:block}
+.rt{position:relative;transition:transform .15s ease}
+.rt.dragging{transition:none;z-index:5;box-shadow:0 8px 24px var(--shadow);opacity:.96}
+.rt.off{opacity:.62}
+.grip{flex:none;display:inline-flex;align-items:center;gap:3px;height:42px;min-width:44px;padding:0 6px;border:1px solid var(--ctl-line);border-radius:9px;background:var(--surface);color:var(--ink2);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.grip:active{cursor:grabbing}
+.grip .no{font-family:var(--font-num),var(--font-ui);font-weight:700;font-size:15px;min-width:1.1em;text-align:center}
+.grip svg{width:10px;height:16px;fill:currentColor}
+.rt.main .grip{border-color:var(--accent-line);color:var(--accent)}
+.rt-acts{align-items:center}
 .rt-meta{margin:0;color:var(--ink2);font-size:.92rem;line-height:1.5;font-family:var(--font-num),var(--font-ui)}
 .rt-meta .tag{display:inline-block;font-family:var(--font-ui);font-size:.74rem;font-weight:600;padding:0 .45rem;border-radius:999px;background:var(--soft);color:var(--ink2);margin-left:4px;vertical-align:1px}
 .rt.main .rt-meta .tag{background:var(--surface)}
@@ -180,7 +189,7 @@ details.help a{color:var(--accent);word-break:break-all}
           <button class="btn" id="btnSample" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 4.5c-1.2-1-2.9-1.5-5.25-1.5v9.5c2.35 0 4.05.5 5.25 1.5 1.2-1 2.9-1.5 5.25-1.5V3C10.9 3 9.2 3.5 8 4.5z"/><path d="M8 4.5V14"/></svg>載入範例</button>
           <button class="btn ghost" id="btnClear" type="button">全部移除</button>
         </div>
-        <p class="hint" id="dropHint">也可以把檔案拖到這裡。第一條是主路線，最多 7 條（含主路線）。</p>
+        <p class="hint" id="dropHint">也可以把檔案拖到這裡。可以加入超過 10 條，圖上只畫最上面 10 條（第一條是主路線）；按住 ⠿ 上下拖曳可調整順序、換主路線。</p>
         <p class="error" id="fileError" hidden></p>
         <div class="rts" id="rts"></div>
         <p class="hint" id="dtmStatus"></p>
@@ -227,7 +236,7 @@ details.help a{color:var(--accent);word-break:break-all}
 /* 路線剖面比較 © 2026 shainyhsu. All rights reserved. 未經作者書面同意，不得重製、改作或散布本網站的程式碼與內容，也不得放進任何商業產品、服務或網站。 */
 (function () {
   'use strict';
-  var VERSION = 'V1';
+  var VERSION = 'V2';
 
   // ================= i18n: Chinese in the page, English from this table =================
   var EN = {   // American English; place names follow official or established English names
@@ -241,7 +250,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '加入 GPX／KML 檔': 'Add GPX/KML files',
     '載入範例': 'Load sample',
     '全部移除': 'Remove all',
-    '也可以把檔案拖到這裡。第一條是主路線，最多 7 條（含主路線）。': 'You can also drag files here. The first route is the main route; up to 7 routes in total.',
+    '也可以把檔案拖到這裡。可以加入超過 10 條，圖上只畫最上面 10 條（第一條是主路線）；按住 ⠿ 上下拖曳可調整順序、換主路線。': 'You can also drag files here. You can add more than 10 routes; the chart shows the top 10 (the first is the main route). Hold ⠿ and drag up or down to reorder or change the main route.',
     '圖卡設定': 'Card settings',
     '標題': 'Title',
     '副標（選填）': 'Subtitle (optional)',
@@ -271,7 +280,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '實際距離': 'Posted distance', '留白＝用 GPX 量的距離；填里程樁的距離就等比例校正': 'Leave blank to use the GPX distance, or enter the distance on trail signs to scale the route to it.',
     '起點名稱': 'Start name', '終點名稱': 'End name', '線色': 'Line color', '圖上的點': 'Points shown on the card',
     '簡稱（表格、坡度帶用）': 'Short name (for the table and grade bands)',
-    '線型': 'Line style', '自動': 'Auto', '實線': 'Solid', '虛線': 'Dashed', '長虛線': 'Long dash', '點線': 'Dotted', '點虛線': 'Dash-dot', '雙點虛線': 'Dash-dot-dot', '長點虛線': 'Long dash-dot', '短虛線': 'Short dash',
+    '線型': 'Line style', '自動': 'Auto', '實線': 'Solid', '虛線': 'Dashed', '長虛線': 'Long dash', '點線': 'Dotted', '點虛線': 'Dash-dot', '雙點虛線': 'Dash-dot-dot', '長點虛線': 'Long dash-dot', '短虛線': 'Short dash', '長短虛線': 'Long-short dash', '三點虛線': 'Dash-dot-dot-dot', '雙虛線': 'Double dash',
     '揹負': 'Pack load', '不標示': 'None', '重裝': 'Full pack', '輕裝': 'Daypack', '例如：揹 13 kg': 'e.g., 13 kg pack',
     '標了揹負的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」。': 'A route with a pack load gets a span arrow above the profile and a row under “Grade bands & pack load.”',
     '列入坡度分級表': 'Include in grade table',
@@ -279,9 +288,9 @@ details.help a{color:var(--accent);word-break:break-all}
     '備註（放在圖例下方）': 'Notes (printed below the legend)',
     '以「・」開頭的行是條列，其他行是小標題': 'Lines starting with “・” become bullet points; other lines become headings.',
     '起點': 'Start', '終點': 'End', '最高點': 'High point', '實走紀錄': 'Recorded', '規劃路線': 'Planned', '距離校正': 'scaled to posted distance',
-    '黑': 'Black', '朱紅': 'Vermilion', '藍': 'Blue', '綠': 'Green', '洋紅': 'Magenta', '紫': 'Purple', '金黃': 'Gold',
+    '黑': 'Black', '朱紅': 'Vermilion', '藍': 'Blue', '綠': 'Green', '洋紅': 'Magenta', '紫': 'Purple', '金黃': 'Gold', '天藍': 'Sky blue', '棕': 'Brown', '灰': 'Gray',
     '已被「{0}」使用': 'In use by “{0}”',
-    '最多 7 條路線（含主路線）；要比更多，請分成兩張圖。': 'Up to 7 routes, including the main route. To compare more, make a second card.',
+    '不在圖上（圖上最多 10 條）': 'Not on the chart (10 routes max)', '畫在圖上': 'Show on the chart', '拖曳調整順序': 'Drag to reorder', '已用新檔案取代範例路線。': 'The sample routes were replaced by your files.',
     '{0} 沒有加入：{1}': '{0} was not added: {1}',
     '檔案不是有效的 GPX 或 KML。': 'This is not a valid GPX or KML file.',
     '軌跡點太少，無法計算。': 'The track has too few points.',
@@ -530,9 +539,9 @@ details.help a{color:var(--accent);word-break:break-all}
   }
 
   // ================= routes: geometry, profile, numbers =================
-  var MAXR = 7, STEP = 20, BREAKS = [-20, -12, -5, 5, 12, 20];
-  var PAL = ['#000000', '#D55E00', '#0072B2', '#009E73', '#CC3D96', '#6A3D9A', '#E69F00'];   // high contrast on white; gold is light, so it gets a dark edge
-  var PAL_NAME = ['黑', '朱紅', '藍', '綠', '洋紅', '紫', '金黃'];
+  var MAXR = 10, STEP = 20, BREAKS = [-20, -12, -5, 5, 12, 20];
+  var PAL = ['#000000', '#D55E00', '#0072B2', '#009E73', '#CC3D96', '#6A3D9A', '#E69F00', '#56B4E9', '#8C510A', '#6E6E6E'];   // high contrast on white; gold is light, so it gets a dark edge
+  var PAL_NAME = ['黑', '朱紅', '藍', '綠', '洋紅', '紫', '金黃', '天藍', '棕', '灰'];
   function lum(hex) { var c = parseInt(hex.slice(1), 16); function f(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); } return 0.2126 * f((c >> 16) & 255) + 0.7152 * f((c >> 8) & 255) + 0.0722 * f(c & 255); }
   function onWhite(hex) { return 1.05 / (lum(hex) + 0.05); }   // contrast ratio against white
   function edged(hex) { return onWhite(hex) < 3; }             // too light to stand alone on white: outline it
@@ -543,8 +552,21 @@ details.help a{color:var(--accent);word-break:break-all}
   }
   var ROUTES = [], SEQ = 1;
   var S = { title: '', sub: '', note: '', ori: 'p' };
-  function defOpts() { return { rev: false, dej: true, from: null, to: null, real: null, startName: '', endName: '', ptNames: {}, ptShow: {}, short: '', dash: 'auto', loadType: 'none', loadText: '', inTable: null, note: '' }; }
+  function defOpts() { return { rev: false, dej: true, from: null, to: null, real: null, startName: '', endName: '', ptNames: {}, ptShow: {}, short: '', dash: 'auto', loadType: 'none', loadText: '', inTable: null, note: '', off: false }; }
   function mainR() { return ROUTES[0] || null; }
+  function shown() {   // the routes drawn on the card: the main route plus the next ticked ones, 10 in all
+    var out = [];
+    ROUTES.forEach(function (r, i) { if (out.length < MAXR && (i === 0 || !r.o.off)) out.push(r); });
+    return out;
+  }
+  function onCard(r) { return shown().indexOf(r) >= 0; }
+  function fixColors() {   // charted routes never share a colour
+    var used = [];
+    shown().forEach(function (r) {
+      if (r.color < 0 || r.color >= PAL.length || used.indexOf(r.color) >= 0) { for (var i = 0; i < PAL.length; i++) if (used.indexOf(i) < 0) { r.color = i; break; } }
+      used.push(r.color);
+    });
+  }
   function newRoute(parsed, fileName) {
     var rec = isRecorded(parsed.pts), P = [];
     parsed.pts.forEach(function (p) {
@@ -679,9 +701,9 @@ details.help a{color:var(--accent);word-break:break-all}
   var GC = ['#08519d', '#3186e9', '#87bafc', '#d8d7d4', '#fd978f', '#e24947', '#9b0d1a'];   // grade colours ≤−20% … ≥+20%, as in 步程試算
   var K = { bg: '#ffffff', ink: '#16201a', ink2: '#4a574f', muted: '#7a877f', line: '#d8ded9', grid: '#e7ebe8', zero: '#c3cbc5', fill: '#c9d0cb', heavy: '#7a5a43', light: '#7f93a8', lightBar: '#b9c7d6' };
   // the main route is the only solid line; each colour has its own dash, so the lines stay apart on a black-and-white print
-  var DASHES = { solid: [], dash: [5, 3], long: [11, 3.5], dot: [0.01, 3.2], dashdot: [7, 2.6, 0.01, 2.6], dashdotdot: [6.5, 2.3, 0.01, 2.3, 0.01, 2.3], longdashdot: [12, 2.8, 0.01, 2.8], shortdash: [2.4, 2] };
-  var AUTO_DASH = ['dashdotdot', 'dash', 'long', 'dot', 'dashdot', 'longdashdot', 'shortdash'];
-  var DASH_NAME = [['auto', '自動'], ['solid', '實線'], ['dash', '虛線'], ['long', '長虛線'], ['dot', '點線'], ['dashdot', '點虛線'], ['dashdotdot', '雙點虛線'], ['longdashdot', '長點虛線'], ['shortdash', '短虛線']];
+  var DASHES = { solid: [], dash: [5, 3], long: [11, 3.5], dot: [0.01, 3.2], dashdot: [7, 2.6, 0.01, 2.6], dashdotdot: [6.5, 2.3, 0.01, 2.3, 0.01, 2.3], longdashdot: [12, 2.8, 0.01, 2.8], shortdash: [2.4, 2], longshort: [11, 2.5, 3.5, 2.5], dashdot3: [6, 2.2, 0.01, 2.2, 0.01, 2.2, 0.01, 2.2], doubledash: [5, 1.8, 5, 4.6] };
+  var AUTO_DASH = ['dashdotdot', 'dash', 'long', 'dot', 'dashdot', 'longdashdot', 'shortdash', 'longshort', 'dashdot3', 'doubledash'];
+  var DASH_NAME = [['auto', '自動'], ['solid', '實線'], ['dash', '虛線'], ['long', '長虛線'], ['dot', '點線'], ['dashdot', '點虛線'], ['dashdotdot', '雙點虛線'], ['longdashdot', '長點虛線'], ['shortdash', '短虛線'], ['longshort', '長短虛線'], ['dashdot3', '三點虛線'], ['doubledash', '雙虛線']];
   var CLS_NAME = ['極陡下坡', '陡下坡', '下坡', '平緩', '一般上坡', '陡上坡', '極陡上坡'];
   var CLS_RANGE = ['−20% 或更陡', '−20 ~ −12%', '−12 ~ −5%', '−5 ~ +5%', '+5 ~ +12%', '+12 ~ +20%', '+20% 或更陡'];
   function fUI() { return LANG === 'en' ? '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang TC","Noto Sans TC","Noto Sans CJK TC",sans-serif' : '"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif'; }
@@ -1167,13 +1189,12 @@ details.help a{color:var(--accent);word-break:break-all}
   function colorMem() { try { return JSON.parse(lsGet('rpc.colors') || '{}') || {}; } catch (e) { return {}; } }
   function remember(r) { var m = colorMem(); m[r.name] = r.color; lsSet('rpc.colors', JSON.stringify(m)); }
   function freeColor(want) {
-    var used = ROUTES.map(function (r) { return r.color; });
+    var used = shown().map(function (r) { return r.color; });
     if (want >= 0 && want < PAL.length && used.indexOf(want) < 0) return want;
     for (var i = 0; i < PAL.length; i++) if (used.indexOf(i) < 0) return i;
     return 0;
   }
   function addParsed(parsed, fileName) {
-    if (ROUTES.length >= MAXR) throw new Error(_t('最多 7 條路線（含主路線）；要比更多，請分成兩張圖。'));
     var r = newRoute(parsed, fileName), m = colorMem();
     r.color = freeColor(has(m, r.name) ? m[r.name] : (ROUTES.length ? -1 : 0));
     ROUTES.push(r);
@@ -1185,9 +1206,13 @@ details.help a{color:var(--accent);word-break:break-all}
     if (!files.length) return;
     err('');
     var msgs = [];
+    if (ROUTES.length && ROUTES.every(function (r) { return r.sample >= 0; })) {   // the sample makes way for the user's own files
+      ROUTES = []; OPEN = {};
+      if (S.title === _t(S_TITLE)) S.title = ''; if (S.sub === _t(S_SUB)) S.sub = '';
+      syncInputs(); msgs.push(_t('已用新檔案取代範例路線。'));
+    }
     files.reduce(function (pr, f) {
       return pr.then(function () {
-        if (ROUTES.length >= MAXR) { msgs.push(_f('{0} 沒有加入：{1}', f.name, _t('最多 7 條路線（含主路線）；要比更多，請分成兩張圖。'))); return; }
         return readFile(f).then(function (p) { addParsed(p, f.name); }, function (e) { msgs.push(_f('{0} 沒有加入：{1}', f.name, e.message || e)); });
       });
     }, Promise.resolve()).then(function () {
@@ -1216,6 +1241,7 @@ details.help a{color:var(--accent);word-break:break-all}
     var bar = LANG === 'en' ? ' | ' : '｜', p = r.p, t = km1(p.len) + ' km' + bar + '+' + nf(p.up) + slash() + '−' + nf(p.dn) + ' m' + bar + nf(p.z0) + ' → ' + nf(p.z1) + ' m';
     var tags = [];
     if (r === mainR()) tags.push(_t('主路線'));
+    else if (!onCard(r)) tags.push(_t('不在圖上（圖上最多 10 條）'));
     tags.push(_t(r.recorded ? '實走紀錄' : '規劃路線'));
     tags.push(_t(p.src === 'gpx' ? 'GPX 高度' : p.src === 'dtm' ? 'DTM 高度' : 'DTM 補高度'));
     if (p.scaled) tags.push(_t('距離校正'));
@@ -1226,11 +1252,12 @@ details.help a{color:var(--accent);word-break:break-all}
   function renderList() {
     var box = $('rts'), M = mainR(), th = PAL;
     if (!ROUTES.length) { box.innerHTML = ''; return; }
+    fixColors();
     box.innerHTML = ROUTES.map(function (r, ri) {
       var b = base(r), isM = r === M;
       var opts = '<option value="" disabled hidden>—</option><option value="s">' + esc(_t('起點')) + ' 0.0 km</option>' + b.wp.map(function (w) { return '<option value="' + esc(w.id) + '">' + esc((has(r.o.ptNames, w.id) ? r.o.ptNames[w.id] : w.name) || '·') + ' ' + km1(w.d) + ' km</option>'; }).join('') + '<option value="e">' + esc(_t('終點')) + ' ' + km1(b.total) + ' km</option>';
       var colors = PAL.map(function (c, i) {
-        var u = ROUTES.filter(function (q) { return q !== r && q.color === i; })[0];
+        var u = shown().filter(function (q) { return q !== r && q.color === i; })[0];
         return '<button type="button" data-act="color" data-c="' + i + '" class="' + (edged(th[i]) ? 'edge' : '') + '" style="background:' + th[i] + '" aria-pressed="' + (r.color === i) + '" title="' + esc(_t(PAL_NAME[i]) + (u ? paren(_f('已被「{0}」使用', u.name)) : '')) + '" aria-label="' + esc(_t(PAL_NAME[i])) + '"></button>';
       }).join('');
       var ptsHtml = '';
@@ -1245,11 +1272,11 @@ details.help a{color:var(--accent);word-break:break-all}
       var dashSel = isM ? '' : '<label class="field">' + esc(_t('線型')) + '<select data-k="dash">' + DASH_NAME.map(function (o) { return '<option value="' + o[0] + '"' + ((r.o.dash || 'auto') === o[0] ? ' selected' : '') + '>' + esc(_t(o[1])) + (o[0] === 'auto' ? paren(esc(_t(DASH_NAME.filter(function (q) { return q[0] === AUTO_DASH[r.color >= 0 ? r.color : 0]; })[0][1]))) : '') + '</option>'; }).join('') + '</select></label>';
       var loadSel = '<div class="setrow"><span>' + esc(_t('揹負')) + '</span><div class="inline"><select data-k="loadType" aria-label="' + esc(_t('揹負')) + '">' + [['none', '不標示'], ['heavy', '重裝'], ['light', '輕裝']].map(function (o) { return '<option value="' + o[0] + '"' + ((r.o.loadType || 'none') === o[0] ? ' selected' : '') + '>' + esc(_t(o[1])) + '</option>'; }).join('') + '</select>' +
         '<input type="text" class="grow" data-k="loadText" value="' + esc(r.o.loadText || '') + '" placeholder="' + esc(_t('例如：揹 13 kg')) + '" aria-label="' + esc(_t('揹負')) + '"></div><p class="hint">' + esc(_t('標了揹負的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」。')) + '</p></div>';
-      return '<div class="rt' + (isM ? ' main' : '') + '" data-id="' + r.id + '">' +
-        '<div class="rt-head">' + lineTile(r, isM, 'rt-sw') + '<input class="nm" type="text" data-k="name" value="' + esc(r.name) + '" aria-label="' + esc(_t('路線名稱')) + '">' +
+      return '<div class="rt' + (isM ? ' main' : '') + (onCard(r) ? '' : ' off') + '" data-id="' + r.id + '">' +
+        '<div class="rt-head"><button type="button" class="grip" data-grip="1" aria-label="' + esc(_t('拖曳調整順序')) + '" title="' + esc(_t('拖曳調整順序')) + '"><span class="no">' + (ri + 1) + '</span><svg viewBox="0 0 10 16" aria-hidden="true"><circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/></svg></button>' + lineTile(r, isM, 'rt-sw') + '<input class="nm" type="text" data-k="name" value="' + esc(r.name) + '" aria-label="' + esc(_t('路線名稱')) + '">' +
         '<button type="button" class="iconbtn" data-act="del" aria-label="' + esc(_t('移除這條路線')) + '" title="' + esc(_t('移除這條路線')) + '">' + TRASH + '</button></div>' +
         '<p class="rt-meta">' + metaHtml(r) + '</p>' +
-        (isM ? '' : '<div class="rt-acts"><button type="button" class="btn ghost" data-act="main">' + esc(_t('設為主路線')) + '</button></div>') +
+        (isM ? '' : '<div class="rt-acts"><button type="button" class="btn ghost" data-act="main">' + esc(_t('設為主路線')) + '</button><label class="ck"><input type="checkbox" data-k="on"' + (r.o.off ? '' : ' checked') + '>' + esc(_t('畫在圖上')) + '</label></div>') +
         '<details class="disc" data-open="' + r.id + '"' + (OPEN[r.id] ? ' open' : '') + '><summary>' + esc(_t('調整：範圍、名稱、線色、揹負、備註')) + '</summary><div class="adj">' +
           '<div class="inline">' + esc(_t('範圍')) + ' ' + esc(_t('從')) + ' <select data-k="fromSel" aria-label="' + esc(_t('從')) + '">' + opts + '</select> ' + esc(_t('到')) + ' <select data-k="toSel" aria-label="' + esc(_t('到')) + '">' + opts + '</select></div>' +
           '<div class="inline">' + esc(_t('或')) + ' <input type="number" data-k="from" step="0.1" min="0" inputmode="decimal" value="' + fmtKm(r.o.from) + '" placeholder="0" aria-label="km"> km ' + esc(_t('到')) + ' <input type="number" data-k="to" step="0.1" min="0" inputmode="decimal" value="' + fmtKm(r.o.to) + '" placeholder="' + km1(b.total) + '" aria-label="km"> km <button type="button" class="btn ghost" data-act="full">' + esc(_t('全段')) + '</button> <span class="hint">' + esc(_f('GPX 全長 {0} km', km2(b.total))) + '</span></div>' +
@@ -1295,6 +1322,7 @@ details.help a{color:var(--accent);word-break:break-all}
     else if (k === 'ptShow') r.o.ptShow[el.getAttribute('data-w')] = el.checked;
     else if (k === 'dash' || k === 'loadType') r.o[k] = el.value;
     else if (k === 'inTable') r.o.inTable = el.checked;
+    else if (k === 'on') { r.o.off = !el.checked; refresh(); renderList(); return; }
     else return;
     refresh(); renderSoon();
   }
@@ -1305,13 +1333,57 @@ details.help a{color:var(--accent);word-break:break-all}
     else if (act === 'main') { ROUTES = [r].concat(ROUTES.filter(function (q) { return q !== r; })); }
     else if (act === 'full') { r.o.from = r.o.to = null; }
     else if (act === 'color') {
-      var c = +bt.getAttribute('data-c'), other = ROUTES.filter(function (q) { return q !== r && q.color === c; })[0];
+      var c = +bt.getAttribute('data-c'), other = shown().filter(function (q) { return q !== r && q.color === c; })[0];
       if (other) { other.color = r.color; remember(other); }
       r.color = c; remember(r);
     }
     renderList(); refresh();
   }
   var renderSoon = debounce(renderList, 30);
+  function dragList(box) {   // hold the grip and drag a route up or down; the top one is the main route
+    var D = null;
+    box.addEventListener('pointerdown', function (e) {
+      var g = e.target.closest('[data-grip]'); if (!g || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      var el = g.closest('.rt'), items = Array.prototype.slice.call(box.querySelectorAll('.rt'));
+      e.preventDefault(); g.setPointerCapture(e.pointerId);
+      D = { g: g, el: el, id: +el.getAttribute('data-id'), y0: e.clientY, from: items.indexOf(el), to: items.indexOf(el), items: items,
+            mids: items.map(function (q) { var b = q.getBoundingClientRect(); return b.top + b.height / 2; }), h: el.getBoundingClientRect().height + 10 };
+      el.classList.add('dragging');
+    });
+    box.addEventListener('pointermove', function (e) {
+      if (!D) return;
+      var dy = e.clientY - D.y0, mid = D.mids[D.from] + dy, to = D.from;
+      for (var i = 0; i < D.mids.length; i++) { if (i < D.from && mid < D.mids[i]) { to = i; break; } }
+      for (var j = D.mids.length - 1; j > D.from; j--) { if (mid > D.mids[j]) { to = j; break; } }
+      D.to = to;
+      D.items.forEach(function (q, k) {
+        if (q === D.el) { q.style.transform = 'translateY(' + dy + 'px)'; return; }
+        var sh = D.from < to && k > D.from && k <= to ? -D.h : D.from > to && k >= to && k < D.from ? D.h : 0;
+        q.style.transform = sh ? 'translateY(' + sh + 'px)' : '';
+      });
+      var r = box.getBoundingClientRect();   // keep scrolling while dragging near the edge
+      if (e.clientY < 60) window.scrollBy(0, -12); else if (e.clientY > window.innerHeight - 60) window.scrollBy(0, 12);
+    });
+    function end() {
+      if (!D) return;
+      var d = D; D = null;
+      d.items.forEach(function (q) { q.style.transform = ''; q.classList.remove('dragging'); });
+      if (d.to !== d.from) {
+        var r = ROUTES.filter(function (q) { return q.id === d.id; })[0];
+        ROUTES = ROUTES.filter(function (q) { return q !== r; }); ROUTES.splice(d.to, 0, r);
+        if (d.to === 0 && r.o) r.o.off = false;
+        renderList(); refresh();
+      }
+    }
+    box.addEventListener('pointerup', end);
+    box.addEventListener('pointercancel', end);
+    box.addEventListener('keydown', function (e) {   // keyboard: arrow keys on the grip
+      var g = e.target.closest('[data-grip]'); if (!g || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+      var r = byEl(g), i = ROUTES.indexOf(r), to = e.key === 'ArrowUp' ? i - 1 : i + 1; if (!r || to < 0 || to >= ROUTES.length) return;
+      e.preventDefault(); ROUTES.splice(i, 1); ROUTES.splice(to, 0, r); renderList(); refresh();
+      var ng = box.querySelector('.rt[data-id="' + r.id + '"] [data-grip]'); if (ng) ng.focus();
+    });
+  }
 
   // ================= compute, DTM, preview =================
   var dtmMsg = '';
@@ -1331,7 +1403,7 @@ details.help a{color:var(--accent);word-break:break-all}
   }
   function cardData() {
     var M = mainR(); if (!M || !M.p || M.p.err) return null;
-    return { main: M, comps: ROUTES.slice(1).filter(function (r) { return r.p && !r.p.err; }),
+    return { main: M, comps: shown().slice(1).filter(function (r) { return r.p && !r.p.err; }),
              title: S.title || M.name, sub: S.sub, note: S.note };
   }
   function drawPreview() {
@@ -1413,7 +1485,7 @@ details.help a{color:var(--accent);word-break:break-all}
   // ================= state =================
   function saveState() {
     var o = { v: 1, S: S, R: ROUTES.map(function (r) { return { name: r.name, file: r.file, recorded: r.recorded, color: r.color, sample: r.sample, o: r.o, pts: r.pts, wpts: r.wpts }; }) };
-    if (!lsSet('rpc.state', JSON.stringify(o))) lsSet('rpc.state', JSON.stringify({ v: 1, S: S, R: [] }));
+    while (!lsSet('rpc.state', JSON.stringify(o)) && o.R.length) o.R.pop();   // too big for storage: keep as many from the top as fit
   }
   function loadState() {
     var j = null;
@@ -1423,7 +1495,7 @@ details.help a{color:var(--accent);word-break:break-all}
     ROUTES = (j.R || []).filter(function (r) { return r && r.pts && r.pts.length > 1; }).map(function (r) {
       return { id: SEQ++, name: r.name || 'GPX', file: r.file || '', recorded: !!r.recorded, color: r.color >= 0 && r.color < PAL.length ? r.color : 0, sample: r.sample, pts: r.pts, wpts: r.wpts || [],
                o: (function (o) { var d = Object.assign(defOpts(), o || {}); if (o && o.ptHide) { Object.keys(o.ptHide).forEach(function (k) { if (o.ptHide[k]) d.ptShow[k] = false; }); delete d.ptHide; } return d; })(r.o) };
-    }).slice(0, MAXR);
+    });
     return true;
   }
   var SAMPLE = null;
@@ -1483,6 +1555,7 @@ details.help a{color:var(--accent);word-break:break-all}
     rts.addEventListener('input', onListInput);
     rts.addEventListener('change', onListChange);
     rts.addEventListener('click', onListClick);
+    dragList(rts);
     rts.addEventListener('toggle', function (e) { var d = e.target; if (d && d.getAttribute && d.getAttribute('data-open')) OPEN[d.getAttribute('data-open')] = d.open; }, true);
     [['cTitle', 'title'], ['cSub', 'sub'], ['cNote', 'note']].forEach(function (q) { $(q[0]).addEventListener('input', function () { S[q[1]] = this.value; drawSoon(); saveSoon(); }); });
     Array.prototype.forEach.call(document.querySelectorAll('input[name=ori]'), function (el) {
