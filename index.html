@@ -62,7 +62,6 @@ h2{font-size:1.02rem}
 @media (min-width:980px){
   .wrap{max-width:1360px}
   .cols{grid-template-columns:minmax(360px,470px) minmax(0,1fr);align-items:start}
-  #prevCard{position:sticky;top:12px}
   .prev{max-height:calc(100vh - 150px);overflow:auto;overscroll-behavior:contain;padding:2px}
 }
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px;min-width:0}
@@ -154,6 +153,26 @@ details.disc[open]>summary{margin-bottom:10px}
 #routeCard.over{outline:2px dashed var(--accent);outline-offset:-4px;background:var(--accent-soft)}
 details.help p.hint{font-size:.84rem;color:var(--muted);line-height:1.6}
 details.help a{color:var(--accent);word-break:break-all}
+/* live profile editor; on a phone or tablet held upright it is docked at the bottom while the routes are edited */
+.ed-top{display:flex;align-items:center;gap:8px}
+.ed-top h2{flex:1 1 auto}
+.dock-b{font:inherit;font-size:.85rem;font-weight:600;min-height:34px;padding:.2rem .8rem;border:1px solid var(--ctl-line);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer}
+@media (max-width:979px) and (orientation:portrait){
+  #editCard{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;border-radius:14px 14px 0 0;border-bottom:0;max-height:66vh;overflow:auto;overscroll-behavior:contain;padding:8px max(10px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));gap:6px;box-shadow:0 -6px 20px var(--shadow)}
+  #editCard .edhint{display:none}
+  #editCard.fold .edwrap,#editCard.fold .edp{display:none}
+  body.edock .wrap{padding-bottom:calc(var(--edh,0px) + 16px)}
+}
+.edwrap{min-width:0}
+#edCv{display:block;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}
+.edp{display:grid;gap:8px;min-width:0}
+.ed-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.ed-sw{flex:none;width:28px;height:28px}
+.ed-nm{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.ed-pos{font-family:var(--font-num),var(--font-ui);font-weight:600;color:var(--ink2);white-space:nowrap}
+.edp .row .btn{min-height:40px;padding:.4rem .75rem;font-size:.9rem}
+.edp input[type=text]{min-height:42px;font-size:16px}
+.edp label.ck{display:flex;align-items:center;gap:8px;font-weight:500}
 /* preview */
 .prev{position:relative;min-width:0}
 .pages{display:grid;gap:14px;justify-items:center;min-width:0}
@@ -195,8 +214,18 @@ details.help a{color:var(--accent);word-break:break-all}
         <p class="hint" id="dtmStatus"></p>
       </section>
 
-      <section class="card" id="setCard" aria-labelledby="hSet">
-        <h2 id="hSet">圖卡設定</h2>
+    </div>
+
+    <div class="col">
+    <section class="card" id="editCard" aria-labelledby="hEdit" hidden>
+      <div class="ed-top"><h2 id="hEdit">剖面編輯</h2><button type="button" class="dock-b" id="edFold" hidden>收起</button></div>
+      <p class="hint edhint">點線上任一處：截掉前段或後段、新增點、改點的名稱。按住左右滑動可沿著線移動。</p>
+      <div class="edwrap"><canvas id="edCv" aria-label="剖面編輯"></canvas></div>
+      <div class="edp" id="edPanel"></div>
+    </section>
+
+    <section class="card" id="prevCard" aria-labelledby="hPrev">
+      <h2 id="hPrev">圖卡設定與預覽</h2>
         <div class="form">
           <label class="full" for="cTitle">標題<input type="text" id="cTitle" autocomplete="off"></label>
           <label class="full" for="cSub">副標（選填）<input type="text" id="cSub" autocomplete="off" placeholder="例如：2026-11-15 單攻、紀錄來源"></label>
@@ -206,6 +235,13 @@ details.help a{color:var(--accent);word-break:break-all}
           <div class="seg"><input type="radio" name="ori" id="oriP" value="p" checked><label for="oriP">直式</label><input type="radio" name="ori" id="oriL" value="l"><label for="oriL">橫式</label></div>
           <p class="hint">A4、300 dpi，四邊留 10 mm 列印邊界；內容多時分成多頁。</p>
         </div>
+      <div class="row">
+        <button class="btn primary" id="btnSave" type="button" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.75M5 7.5l3 3 3-3"/><path d="M2.75 11.5v1.25c0 .7.55 1.25 1.25 1.25h8c.7 0 1.25-.55 1.25-1.25V11.5"/></svg>下載 JPG</button>
+        <button class="btn" id="btnShare" type="button" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="12" cy="3.5" r="1.75"/><circle cx="4" cy="8" r="1.75"/><circle cx="12" cy="12.5" r="1.75"/><path d="m5.5 7.1 5-2.7M5.5 8.9l5 2.7"/></svg>分享圖片</button>
+        <span class="outinfo" id="outInfo"></span>
+      </div>
+      <p class="status" id="saveMsg" aria-live="polite"></p>
+      <div class="prev" id="prev"><div class="empty" id="prevEmpty">加入 GPX 後，這裡會出現圖卡。</div><div class="pages" id="pages" hidden></div></div>
         <details class="help"><summary>說明</summary>
           <p>縱軸是相對起點的高度：每條線都從 0 km、0 m 起算，比的是陡度與長度；地名旁的數字是實際海拔。</p>
           <p>高度直接用 GPX 的紀錄；GPX 缺高度的點，才用內政部 20 m 數值地形模型（台灣）補上，兩者的差異不計。</p>
@@ -214,19 +250,8 @@ details.help a{color:var(--accent);word-break:break-all}
           <p>標了揹負（重裝／輕裝）的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」；勾「列入坡度分級表」的路線列在表中，預設是主路線與實走紀錄。坡度每 100 m 一格；最陡的 300 m／1 km＝任一連續 300 m／1 km 的淨升換算成坡度。</p>
           <p class="hint">地形資料：內政部 20 公尺網格數值地形模型資料；圖磚由 OsmHackTW terrain-rgb 於 2023 年轉製。此開放資料依政府資料開放授權條款（Open Government Data License）進行公眾釋出，使用者於遵守本條款各項規定之前提下，得利用之。政府資料開放授權條款：<a href="https://data.gov.tw/license" target="_blank" rel="noopener">https://data.gov.tw/license</a></p>
         </details>
-      </section>
-    </div>
-
-    <section class="card" id="prevCard" aria-labelledby="hPrev">
-      <h2 id="hPrev">預覽</h2>
-      <div class="row">
-        <button class="btn primary" id="btnSave" type="button" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.75M5 7.5l3 3 3-3"/><path d="M2.75 11.5v1.25c0 .7.55 1.25 1.25 1.25h8c.7 0 1.25-.55 1.25-1.25V11.5"/></svg>下載 JPG</button>
-        <button class="btn" id="btnShare" type="button" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="12" cy="3.5" r="1.75"/><circle cx="4" cy="8" r="1.75"/><circle cx="12" cy="12.5" r="1.75"/><path d="m5.5 7.1 5-2.7M5.5 8.9l5 2.7"/></svg>分享圖片</button>
-        <span class="outinfo" id="outInfo"></span>
-      </div>
-      <p class="status" id="saveMsg" aria-live="polite"></p>
-      <div class="prev" id="prev"><div class="empty" id="prevEmpty">加入 GPX 後，這裡會出現圖卡。</div><div class="pages" id="pages" hidden></div></div>
     </section>
+    </div>
   </div>
 
   <footer class="rights">© 2026 shainyhsu｜路線剖面比較<br>歡迎使用；未經作者書面同意，不得重製、改作或散布本網站的程式碼與內容，也不得放進任何商業產品、服務或網站。</footer>
@@ -236,7 +261,7 @@ details.help a{color:var(--accent);word-break:break-all}
 /* 路線剖面比較 © 2026 shainyhsu. All rights reserved. 未經作者書面同意，不得重製、改作或散布本網站的程式碼與內容，也不得放進任何商業產品、服務或網站。 */
 (function () {
   'use strict';
-  var VERSION = 'V2';
+  var VERSION = 'V3';
 
   // ================= i18n: Chinese in the page, English from this table =================
   var EN = {   // American English; place names follow official or established English names
@@ -266,7 +291,11 @@ details.help a{color:var(--accent);word-break:break-all}
     '實走紀錄（有時間戳記）會先去除停留時的 GPS 漂移：點與點至少相距 8 m。每條路線的「調整」可以選一段、反轉方向、依里程樁的實際距離等比例校正、改名稱與簡稱、換線色與線型、標揹負、寫備註，也能選要標在圖上的點。': 'Recorded tracks (with timestamps) first have GPS drift removed from stops, keeping points at least 8 m apart. Under “Adjust,” you can trim each route to a section, reverse it, scale it to the distance posted on trail signs, rename it and give it a short name, change its line color and style, set its pack load, add notes, and choose which points appear on the card.',
     '標了揹負（重裝／輕裝）的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」；勾「列入坡度分級表」的路線列在表中，預設是主路線與實走紀錄。坡度每 100 m 一格；最陡的 300 m／1 km＝任一連續 300 m／1 km 的淨升換算成坡度。': 'A route with a pack load (full pack or daypack) gets a span arrow above the profile and a row under “Grade bands & pack load.” Routes checked “Include in grade table” appear in the table; by default, these are the main route and recorded tracks. Grade is measured over each 100 m; the steepest 300 m or 1 km is the largest net gain over any continuous 300 m or 1 km, expressed as a grade.',
     '地形資料：內政部 20 公尺網格數值地形模型資料；圖磚由 OsmHackTW terrain-rgb 於 2023 年轉製。此開放資料依政府資料開放授權條款（Open Government Data License）進行公眾釋出，使用者於遵守本條款各項規定之前提下，得利用之。政府資料開放授權條款：': 'Terrain data: Ministry of the Interior 20 m grid digital terrain model; tiles converted by OsmHackTW terrain-rgb in 2023. This open data is released to the public under the Open Government Data License; users may use it in compliance with the terms of that license. Open Government Data License: ',
-    '預覽': 'Preview',
+    '預覽': 'Preview', '圖卡設定與預覽': 'Card settings & preview', '剖面編輯': 'Profile editor',
+    '點線上任一處：截掉前段或後段、新增點、改點的名稱。按住左右滑動可沿著線移動。': 'Tap anywhere on a line to trim the part before or after it, add a point, or rename a point. Hold and slide sideways to move along the line.',
+    '點線上任一處開始編輯。': 'Tap a line to start editing.', '海拔': 'elev.', '從這裡開始（截掉前段）': 'Start here (trim before)', '到這裡結束（截掉後段）': 'End here (trim after)',
+    '在這裡新增點': 'Add a point here', '點的名稱': 'Point name', '顯示在圖卡': 'Show on the card', '刪除這個點': 'Delete this point', '恢復全段': 'Restore full route',
+    '新的點': 'New point', '收起': 'Hide', '展開': 'Show', '往前': 'Back', '往後': 'Forward', '這裡太靠近另一端，至少要留 100 m。': 'Too close to the other end; keep at least 100 m.',
     '加入 GPX 後，這裡會出現圖卡。': 'Add a GPX file to see the card here.',
     '下載 JPG': 'Download JPG',
     '分享圖片': 'Share',
@@ -602,12 +631,20 @@ details.help a{color:var(--accent);word-break:break-all}
     // waypoints: one place for every pass within 80 m (an out-and-back passes twice)
     var wp = [];
     r.wpts.forEach(function (w, wi) {
+      if (w.gone) return;
       var run = null, k = 0;
       for (var m = 0; m <= n; m++) {
         var d = m < n ? hav(w.lat, w.lon, P[m][0], P[m][1]) : 1e9;
         if (d <= 80) { if (!run || d < run.dd) run = { dd: d, i: m }; }
         else if (run) { wp.push({ id: wi + ':' + (k++), wi: wi, name: w.name, d: cum[run.i] }); run = null; }
       }
+    });
+    r.wpts.forEach(function (w, wi) {   // a point added on the profile sits on one pass only: the one nearest where it was added
+      if (!w.user || w.gone || !(w.f >= 0)) return;
+      var hint = (!!r.o.rev === !!w.rev ? w.f : 1 - w.f) * cum[n - 1], mine = wp.filter(function (q) { return q.wi === wi; }), keep = null;
+      mine.forEach(function (q) { if (!keep || Math.abs(q.d - hint) < Math.abs(keep.d - hint)) keep = q; });
+      wp = wp.filter(function (q) { return q.wi !== wi || q === keep; });
+      if (keep) keep.id = wi + ':0';
     });
     wp.sort(function (x, y) { return x.d - y.d; });
     var hasE = P.map(function (q) { return q[2] !== null && isFinite(q[2]); });
@@ -1409,6 +1446,7 @@ details.help a{color:var(--accent);word-break:break-all}
   function drawPreview() {
     var D = cardData(), box = $('pages'), em = $('prevEmpty');
     $('btnSave').disabled = !D; $('btnShare').disabled = !D;
+    drawEdit(); if (!$('edPanel').contains(document.activeElement)) renderEdit();
     if (!D) { box.innerHTML = ''; box.hidden = true; em.hidden = false; $('outInfo').textContent = ''; $('btnSave').lastChild.nodeValue = _t('下載 JPG'); return; }
     var doc = buildDoc(D, S.ori), dpr = Math.min(2, window.devicePixelRatio || 1), wcss = Math.max(240, box.clientWidth || $('prev').clientWidth || 600);
     if (window.matchMedia && window.matchMedia('(min-width: 980px)').matches) wcss = Math.max(240, Math.min(wcss, Math.floor(Math.max(420, window.innerHeight - 170) * doc.W / doc.H)));
@@ -1419,6 +1457,192 @@ details.help a{color:var(--accent);word-break:break-all}
     var w = Math.round(doc.W * PT2PX), h = Math.round(doc.H * PT2PX);
     $('outInfo').textContent = _f(S.ori === 'p' ? 'A4 直式・{0} 頁・{1} × {2} px・300 dpi' : 'A4 橫式・{0} 頁・{1} × {2} px・300 dpi', LANG === 'en' ? (doc.n === 1 ? '1 page' : doc.n + ' pages') : doc.n, nf(w), nf(h));
     $('btnSave').lastChild.nodeValue = doc.n > 1 ? _f('下載 JPG（{0} 頁）', doc.n) : _t('下載 JPG');
+  }
+
+  // ================= live profile editor: tap a line to trim it, add a point or rename one =================
+  var SEL = null, ED = null, EDRAG = false;   // SEL: { id: route id, x: metres along the drawn line, pt: point key or null }
+  function edRoutes() { return shown().filter(function (r) { return r.p && !r.p.err; }); }
+  function edRoute() { if (!SEL) return null; var r = edRoutes().filter(function (q) { return q.id === SEL.id; })[0]; return r || null; }
+  function edPts(r) {
+    var p = r.p, out = [{ key: 's', name: p.startName, x: 0, z: p.z0, show: true }, { key: 'e', name: p.endName, x: p.len, z: p.z1, show: true }];
+    p.mid.forEach(function (m) { var w = r.wpts[+String(m.id).split(':')[0]] || {}; out.push({ key: m.id, name: m.name, x: m.x, z: m.ze, show: m.show, user: !!w.user }); });
+    if (r === mainR() && p.maxQ && !p.maxDup) out.push({ key: 'max', name: p.maxName, x: p.maxAt, z: p.zmaxE, show: p.maxShow });
+    return out;
+  }
+  function niceStep(span, n, steps) { for (var i = 0; i < steps.length; i++) if (span / steps[i] <= n) return steps[i]; return steps[steps.length - 1]; }
+  function drawEdit() {
+    var cv = $('edCv'), card = $('editCard'), rs = edRoutes();
+    if (!rs.length) { card.hidden = true; ED = null; return; }
+    card.hidden = false;
+    var dock = edDocked(), W = Math.max(260, cv.parentNode.clientWidth || 600), H = Math.round(dock ? clamp(W * 0.5, 170, window.innerHeight * 0.32) : clamp(W * 0.56, 240, 440)), dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + 'px';
+    var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+    var fs = W < 420 ? 11 : 12, font = function (w) { return w + ' ' + fs + 'px ' + fUI(); };
+    var maxLen = Math.max.apply(null, rs.map(function (r) { return r.p.len; })), vmin = Infinity, vmax = -Infinity;
+    rs.forEach(function (r) { r.p.z.forEach(function (v) { v -= r.p.z0; if (v < vmin) vmin = v; if (v > vmax) vmax = v; }); });
+    var span = Math.max(vmax - vmin, 100), vtop = vmax + span * 0.14, vbot = vmin - span * 0.05;
+    g.font = font(400);
+    var ystep = niceStep(vtop - vbot, 6, [20, 50, 100, 200, 250, 500, 1000, 2000]), lw = 0;
+    for (var v = Math.ceil(vbot / ystep) * ystep; v <= vtop; v += ystep) lw = Math.max(lw, g.measureText(signed(v)).width);
+    var PL = lw + 10, PR = 12, PT = 10, PB = fs + 12, PW = W - PL - PR, PH = H - PT - PB;
+    function sx(x) { return PL + PW * x / maxLen; }
+    function sy(v) { return PT + PH * (vtop - v) / (vtop - vbot); }
+    g.lineWidth = 1; g.textBaseline = 'middle';
+    for (v = Math.ceil(vbot / ystep) * ystep; v <= vtop; v += ystep) {
+      g.strokeStyle = v === 0 ? K.zero : K.grid; g.beginPath(); g.moveTo(PL, Math.round(sy(v)) + 0.5); g.lineTo(W - PR, Math.round(sy(v)) + 0.5); g.stroke();
+      g.fillStyle = K.muted; g.textAlign = 'right'; g.fillText(signed(v), PL - 5, sy(v));
+    }
+    var xstep = niceStep(maxLen, 8, [500, 1000, 2000, 5000, 10000, 20000]);
+    g.textAlign = 'center'; g.textBaseline = 'top';
+    for (var kx = 0; kx <= maxLen + 1; kx += xstep) g.fillText(xstep < 1000 ? (kx / 1000).toFixed(1) : String(kx / 1000), sx(kx), H - PB + 5);
+    g.textAlign = 'right'; g.fillText('km', W - PR, H - PB + 5);
+    var M = mainR();
+    rs.slice().reverse().forEach(function (r) {
+      var p = r.p, isM = r === M, c = PAL[r.color >= 0 ? r.color : 0];
+      g.beginPath();
+      for (var i = 0; i < p.x.length; i++) { var X = sx(p.x[i]), Y = sy(p.z[i] - p.z0); if (i) g.lineTo(X, Y); else g.moveTo(X, Y); }
+      g.setLineDash(DASHES[dashOf(r, isM)].map(function (d) { return Math.max(d * 1.3, 0.01); }));
+      g.lineCap = /dot/.test(dashOf(r, isM)) ? 'round' : 'butt'; g.lineJoin = 'round';
+      if (edged(c)) { g.strokeStyle = '#16201a'; g.lineWidth = (isM ? 2.6 : 2.2) + 1.6; g.stroke(); }
+      g.strokeStyle = c; g.lineWidth = isM ? 2.6 : 2.2; g.stroke(); g.setLineDash([]);
+    });
+    g.textBaseline = 'alphabetic';
+    rs.forEach(function (r) {   // points: filled when shown on the card, small grey rings when not
+      var c = PAL[r.color >= 0 ? r.color : 0];
+      edPts(r).forEach(function (m) {
+        var X = sx(m.x), Y = sy(zAt(r.p.x, r.p.z, m.x) - r.p.z0);
+        g.beginPath(); g.arc(X, Y, m.show ? 3.6 : 2.6, 0, Math.PI * 2);
+        g.fillStyle = '#ffffff'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = m.show ? textCol(c) : '#9aa59e'; g.stroke();
+        if (m.show && (m.key !== 's' || r === M)) {
+          var t = m.name || '';
+          if (t) { g.font = font(600); g.textAlign = X > W - 60 ? 'right' : X < PL + 40 ? 'left' : 'center'; g.lineWidth = 3; g.strokeStyle = '#ffffff'; g.strokeText(t, X, Y - 7); g.fillStyle = textCol(c); g.fillText(t, X, Y - 7); }
+        }
+      });
+    });
+    ED = { sx: sx, sy: sy, inv: function (px) { return clamp((px - PL) / PW * maxLen, 0, maxLen); }, rs: rs, maxLen: maxLen };
+    var r0 = edRoute();
+    if (r0) {
+      var xs = clamp(SEL.x, 0, r0.p.len), X0 = sx(xs), Y0 = sy(zAt(r0.p.x, r0.p.z, xs) - r0.p.z0);
+      g.strokeStyle = '#2f7d57'; g.lineWidth = 1; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(Math.round(X0) + 0.5, PT); g.lineTo(Math.round(X0) + 0.5, H - PB); g.stroke(); g.setLineDash([]);
+      g.beginPath(); g.arc(X0, Y0, 7, 0, Math.PI * 2); g.lineWidth = 2.4; g.strokeStyle = '#2f7d57'; g.stroke();
+      g.beginPath(); g.arc(X0, Y0, 2.4, 0, Math.PI * 2); g.fillStyle = '#2f7d57'; g.fill();
+    }
+  }
+  function edDocked() { return !!(window.matchMedia && window.matchMedia('(max-width: 979px) and (orientation: portrait)').matches); }
+  var EDFOLD = lsGet('rpc.edfold') === '1';
+  function edDockSize() {
+    var card = $('editCard'), on = edDocked() && !card.hidden, fb = $('edFold');
+    fb.hidden = !on; fb.textContent = _t(EDFOLD ? '展開' : '收起'); card.classList.toggle('fold', on && EDFOLD);
+    document.body.classList.toggle('edock', on);
+    document.documentElement.style.setProperty('--edh', (on ? card.offsetHeight : 0) + 'px');
+  }
+  function edHit(px, py, only) {
+    if (!ED) return null;
+    var best = null;
+    ED.rs.forEach(function (r) {
+      if (only && r.id !== only) return;
+      edPts(r).forEach(function (m) {
+        var d = Math.hypot(ED.sx(m.x) - px, ED.sy(zAt(r.p.x, r.p.z, m.x) - r.p.z0) - (only ? ED.sy(zAt(r.p.x, r.p.z, m.x) - r.p.z0) : py));
+        if (d < (only ? 10 : 16) && (!best || d < best.d)) best = { d: d, id: r.id, x: m.x, pt: m.key };
+      });
+    });
+    if (best) return best;
+    var x = ED.inv(px);
+    ED.rs.forEach(function (r) {
+      if (only && r.id !== only) return;
+      var xx = clamp(x, 0, r.p.len), d = Math.abs(ED.sy(zAt(r.p.x, r.p.z, xx) - r.p.z0) - py) + 2 * Math.abs(ED.sx(xx) - px);
+      if (!best || d < best.d) best = { d: d, id: r.id, x: xx, pt: null };
+    });
+    return best;
+  }
+  function elevAt(r, x) {   // the elevation printed for a spot: the GPX height (unsmoothed) where there is one
+    var b = base(r), p = r.p, d = p.a + x / p.sc, k = 0;
+    if (!b.anyE) return zAt(p.x, p.z, x);
+    while (k < b.cum.length - 2 && b.cum[k + 1] < d) k++;
+    var f = b.cum[k + 1] > b.cum[k] ? clamp((d - b.cum[k]) / (b.cum[k + 1] - b.cum[k]), 0, 1) : 0;
+    return b.ele[k] + ((b.ele[k + 1] !== undefined ? b.ele[k + 1] : b.ele[k]) - b.ele[k]) * f;
+  }
+  function renderEdit() {
+    var box = $('edPanel'), r = edRoute();
+    if (!r) { SEL = null; box.innerHTML = '<p class="hint">' + esc(_t('點線上任一處開始編輯。')) + '</p>'; return; }
+    var p = r.p, isM = r === mainR(), x = clamp(SEL.x, 0, p.len), m = SEL.pt ? edPts(r).filter(function (q) { return q.key === SEL.pt; })[0] : null;
+    if (SEL.pt && !m) SEL.pt = null;
+    var z = m && m.z !== undefined && isFinite(m.z) ? m.z : elevAt(r, x);
+    var h = '<div class="ed-head">' + lineTile(r, isM, 'ed-sw') + '<span class="ed-nm">' + esc(r.name) + '</span><span class="ed-pos">' + km2(x) + ' km・' + esc(_t('海拔')) + ' ' + nf(z) + ' m</span></div>';
+    if (m) {
+      h += '<label class="field">' + esc(_t('點的名稱')) + '<input type="text" data-e="name" value="' + esc(m.name) + '"></label>';
+      if (m.key !== 's' && m.key !== 'e') h += '<label class="ck"><input type="checkbox" data-e="show"' + (m.show ? ' checked' : '') + '>' + esc(_t('顯示在圖卡')) + '</label>';
+      if (m.user) h += '<div class="row"><button type="button" class="btn ghost" data-e="delpt">' + esc(_t('刪除這個點')) + '</button></div>';
+    } else {
+      h += '<div class="row"><button type="button" class="btn" data-e="cutA">' + esc(_t('從這裡開始（截掉前段）')) + '</button><button type="button" class="btn" data-e="cutB">' + esc(_t('到這裡結束（截掉後段）')) + '</button><button type="button" class="btn primary" data-e="add">' + esc(_t('在這裡新增點')) + '</button></div>';
+    }
+    h += '<div class="row"><button type="button" class="btn ghost" data-e="prev" aria-label="' + esc(_t('往前')) + '">◀</button><button type="button" class="btn ghost" data-e="next" aria-label="' + esc(_t('往後')) + '">▶</button>' +
+      (r.o.from !== null || r.o.to !== null ? '<button type="button" class="btn ghost" data-e="full">' + esc(_t('恢復全段')) + '</button>' : '') + '</div>';
+    box.innerHTML = h;
+  }
+  var _re = renderEdit; renderEdit = function () { _re(); edDockSize(); };
+  function edApply(fn) { fn(); refresh(); renderList(); drawEdit(); renderEdit(); }
+  function edWire() {
+    var cv = $('edCv'), box = $('edPanel');
+    $('edFold').addEventListener('click', function () { EDFOLD = !EDFOLD; lsSet('rpc.edfold', EDFOLD ? '1' : '0'); if (!EDFOLD) drawEdit(); edDockSize(); });
+    function pos(e) { var b = cv.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; }
+    cv.addEventListener('pointerdown', function (e) {
+      var q = pos(e), h = edHit(q[0], q[1]); if (!h) return;
+      SEL = { id: h.id, x: h.x, pt: h.pt }; EDRAG = true;
+      try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+      drawEdit(); renderEdit();
+    });
+    cv.addEventListener('pointermove', function (e) {
+      if (!EDRAG || !SEL) return;
+      var q = pos(e), h = edHit(q[0], q[1], SEL.id); if (!h) return;
+      SEL.x = h.x; SEL.pt = h.pt; drawEdit(); renderEdit();
+    });
+    function up() { EDRAG = false; }
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    box.addEventListener('click', function (e) { var bt = e.target.closest('button[data-e]'); if (bt) edDo(bt.getAttribute('data-e')); });
+    function edDo(a) {
+      var r = edRoute(); if (!r) return;
+      var p = r.p, d = p.a + clamp(SEL.x, 0, p.len) / p.sc, b = base(r);
+      if (a === 'cutA' || a === 'cutB') {
+        if ((a === 'cutA' ? p.e - d : d - p.a) < 100) { box.insertAdjacentHTML('afterbegin', '<p class="error">' + esc(_t('這裡太靠近另一端，至少要留 100 m。')) + '</p>'); return; }
+        edApply(function () {
+          if (a === 'cutA') { r.o.from = Math.round(d) / 1000; SEL.x = 0; SEL.pt = 's'; }
+          else { r.o.to = Math.round(d) / 1000; SEL.pt = 'e'; }
+        });
+        if (a === 'cutB') { SEL.x = r.p.len; drawEdit(); renderEdit(); }
+      } else if (a === 'add') {
+        var k = 0; while (k < b.cum.length - 2 && b.cum[k + 1] < d) k++;
+        var f = b.cum[k + 1] > b.cum[k] ? clamp((d - b.cum[k]) / (b.cum[k + 1] - b.cum[k]), 0, 1) : 0, P0 = b.P[k], P1 = b.P[k + 1] || P0;
+        var wi = r.wpts.length;
+        r.wpts.push({ lat: Math.round((P0[0] + (P1[0] - P0[0]) * f) * 1e6) / 1e6, lon: Math.round((P0[1] + (P1[1] - P0[1]) * f) * 1e6) / 1e6, name: _t('新的點'), user: true, f: b.total ? d / b.total : 0, rev: !!r.o.rev });
+        r._b = null;
+        var ws = base(r).wp.filter(function (w) { return w.wi === wi; }), best = null;
+        ws.forEach(function (w) { if (!best || Math.abs(w.d - d) < Math.abs(best.d - d)) best = w; });
+        if (best) r.o.ptShow[best.id] = true;
+        edApply(function () { if (best) SEL.pt = best.id; });
+        var inp = box.querySelector('input[data-e=name]'); if (inp && inp.focus) { inp.focus(); inp.select(); }
+      } else if (a === 'delpt') {
+        var w0 = r.wpts[+String(SEL.pt).split(':')[0]]; if (w0) w0.gone = true;
+        r._b = null; edApply(function () { SEL.pt = null; });
+      } else if (a === 'prev' || a === 'next') {
+        var st = Math.max(20, Math.round(ED.maxLen / 300 / 10) * 10);
+        SEL.x = clamp(SEL.x + (a === 'next' ? st : -st), 0, p.len); SEL.pt = null;
+        drawEdit(); renderEdit();
+      } else if (a === 'full') {
+        var dd = d; edApply(function () { r.o.from = r.o.to = null; });
+        SEL.x = clamp((dd - r.p.a) * r.p.sc, 0, r.p.len); drawEdit(); renderEdit();
+      }
+    }
+    window.__edDo = edDo;
+    box.addEventListener('input', function (e) {
+      var el = e.target, r = edRoute(); if (!r || el.getAttribute('data-e') !== 'name' || !SEL.pt) return;
+      if (SEL.pt === 's') r.o.startName = el.value; else if (SEL.pt === 'e') r.o.endName = el.value; else r.o.ptNames[SEL.pt] = el.value;
+      refresh(true); renderSoon();
+    });
+    box.addEventListener('change', function (e) {
+      var el = e.target, r = edRoute(); if (!r || el.getAttribute('data-e') !== 'show' || !SEL.pt) return;
+      r.o.ptShow[SEL.pt] = el.checked; refresh(); renderSoon();
+    });
   }
   var drawSoon = debounce(drawPreview, 60);
   var saveSoon = debounce(saveState, 500);
@@ -1583,6 +1807,7 @@ details.help a{color:var(--accent);word-break:break-all}
       syncInputs(); computeAll(); renderList(); refresh();
     });
     window.addEventListener('resize', drawSoon);
+    edWire();
     computeAll(); renderList(); refresh();
     var fonts = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 16px "Barlow Semi Condensed"'), document.fonts.load('500 16px "Barlow Semi Condensed"')]).catch(function () { return null; }) : Promise.resolve();
     Promise.race([fonts, new Promise(function (ok) { setTimeout(ok, 2500); })]).then(drawPreview);
