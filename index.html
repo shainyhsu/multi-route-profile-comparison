@@ -1354,9 +1354,16 @@ details.help a{color:var(--accent);word-break:break-all}
     else return;
     refresh(true);
   }
+  function flipNames(r) {   // reversing swaps the start and end names, and "A→B" route names become "B→A"
+    var m = /^(.+?)\s*(→|⇀|->|－|—|–|~|～|-)\s*(.+)$/.exec(r.name), two = m && r.name.split(m[2]).length === 2 ? [m[1].trim(), m[3].trim()] : null;
+    var sN = r.o.startName, eN = r.o.endName;
+    r.o.startName = eN || ''; r.o.endName = sN || '';
+    if (two) { r.name = two[1] + m[2] + two[0]; remember(r); }
+    return two;   // the old start and end, for an end that has no named point of its own
+  }
   function onListChange(ev) {
     var el = ev.target, r = byEl(el), k = el.getAttribute('data-k'); if (!r || !k) return;
-    if (k === 'rev') { r.o.rev = el.checked; r.o.from = r.o.to = null; }
+    if (k === 'rev') { r.o.rev = el.checked; r.o.from = r.o.to = null; var two = flipNames(r); refresh(); if (two && r.p && !r.p.err) { if (!r.o.endName && r.p.endName === r.name) r.o.endName = two[0]; if (!r.o.startName && r.p.startName === _t('起點')) r.o.startName = two[1]; } }
     else if (k === 'dej') { r.o.dej = el.checked; r.o.from = r.o.to = null; }
     else if (k === 'fromSel') r.o.from = el.value === 's' ? null : wpKm(r, el.value);
     else if (k === 'toSel') r.o.to = el.value === 'e' ? null : wpKm(r, el.value);

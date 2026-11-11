@@ -2,6 +2,7 @@
 
 Newest first. Each update of the page is one version. Times are Taiwan time (UTC+8).
 
+- V10 | 2026-11-11 16:35 | Reverse now swaps the start and end names too, and a route named like "A-B" or "A→B" becomes "B-A"
 - V9 | 2026-11-11 16:20 | Notes moved to a ? button in the header, next to Save; each route's settings now end with a Collapse button, so you don't have to scroll back up to close them
 - V8 | 2026-11-11 11:45 | Pasting a save link into a tab that already has the page open now loads it too (before, only a fresh open did)
 - V7 | 2026-11-11 11:25 | Save links are now short (about 90 characters): the save is encrypted in your browser, only the scrambled copy is stored online, and the key stays in the link, so whoever has the link can open it without signing in; the full link is used if the short one can't be made
