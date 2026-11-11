@@ -1,4 +1,4 @@
-# Multi-Route Profile Comparison — Changelog
+# Multi-Route Profile Comparison: changelog
 
 Newest first. Each update of the page is one version. Times are Taiwan time (UTC+8).
 
