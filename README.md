@@ -31,13 +31,14 @@ Single HTML page on GitHub Pages. No backend, no install. Terrain data: Ministry
 
 ## License
 
-Copyright (c) 2026 Shainy Hsu. All rights reserved. You may use the published tool in your browser; copying, redistributing, scraping, or using any part of it to train AI models is not permitted without written permission. See [LICENSE](LICENSE).
+Copyright (c) 2026 Shainy Hsu. All rights reserved. See [LICENSE](LICENSE).
 
 ## Version history
 
 Newest first. Times are Taiwan time (UTC+8). Also kept in [CHANGELOG.md](CHANGELOG.md).
 
-- V5 | 2026-11-11 09:45 | Save button: share or copy a save link, or download and open a .json file, to move the routes and settings to another device (it still autosaves in the browser)
+- V6 | 2026-11-11 10:07 | New license terms: free to use in a browser for personal, work, school or club use, and the results you make are yours to share; copying, paid services built on it, and AI training need written permission. A License link sits at the bottom of the page
+- V5 | 2026-11-11 09:15 | Save button: share or copy a save link, or download and open a .json file, to move the routes and settings to another device (it still autosaves in the browser)
 - V4 | 2026-11-10 23:15 | Trim right at a named point (the point becomes the new start or end); sliding along a line no longer snaps back to nearby points; Duplicate button adds the same GPX again so each copy can be trimmed to its own section, starting from 0 km
 - V3 | 2026-11-10 10:40 | Live profile editor above the card: tap any line to trim the part before or after that spot, add a named point, rename or hide a point, and read its elevation; card settings and preview merged into one panel; on a phone or tablet held upright the editor is docked at the bottom (with Hide) so it stays in view while editing routes
 - V2 | 2026-11-10 09:35 | Route limit raised: add more than 10 GPX files and the chart draws the top 10 (with a per-route Show on the chart option); the sample routes make way for the first files you add; drag routes by the numbered handle to reorder or change the main route; three more line colors and dash styles for 10 lines
