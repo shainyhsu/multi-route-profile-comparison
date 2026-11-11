@@ -102,6 +102,9 @@ details.help>summary{list-style:none;display:inline-flex;align-items:center;gap:
 details.help>summary::-webkit-details-marker{display:none}
 details.help>summary::before{content:"?";display:inline-grid;place-items:center;width:1.25rem;height:1.25rem;border-radius:50%;background:var(--surface);color:var(--accent);font-size:.78rem;font-weight:700;border:1px solid var(--accent-line)}
 details.help[open]>summary{margin-bottom:8px}
+.help.intro>summary{display:none}.help.intro:not([open]){display:none}.help.intro{margin:2px 0 4px;padding:12px 14px;border:1px solid var(--ctl-line);border-radius:12px;background:var(--surface)}.help.intro p:last-child{margin-bottom:0}
+.hbtn.on{border-color:var(--accent);color:var(--accent)}
+.adjend{display:flex;justify-content:flex-end;margin-top:2px}
 details.help p{margin:0 0 .5rem;color:var(--ink);font-size:.98rem;line-height:1.7}
 details.disc>summary{list-style:none;display:flex;align-items:center;gap:.55rem;min-height:40px;padding:.4rem .7rem;border:1px solid var(--ctl-line);border-radius:9px;background:var(--surface);color:var(--ink);font-weight:600;font-size:.9rem;cursor:pointer}
 details.disc>summary::-webkit-details-marker{display:none}
@@ -192,7 +195,7 @@ details.help a{color:var(--accent);word-break:break-all}
       <button type="button" class="hbtn" id="langBtn" aria-label="Switch to English" title="English"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.9 10h14.2"/><path d="M10 2.75c2 2 3 4.4 3 7.25s-1 5.25-3 7.25c-2-2-3-4.4-3-7.25s1-5.25 3-7.25z"/></svg></button>
     </div>
   </header>
-  <details class="help intro"><summary>說明</summary>
+  <details class="help intro" id="introHelp"><summary>說明</summary>
     <p>把幾條登山路線的距離與高度剖面放在同一張圖比較。第一條是主路線，依坡度分色；其他路線從同一個起點畫起，線尾標終點名稱與實際海拔。</p>
     <p>圖卡含 1:1 實際比例剖面、高度剖面、圖例、坡度帶與坡度分級表，存成 A4 直式或橫式 JPG（300 dpi，直式 2,480 × 3,508 px）；路線多時自動分成多頁。</p>
     <p>檔案只在你的瀏覽器裡處理，不會上傳。GPX 缺高度時，才會下載路線附近的內政部 20 m 地形圖磚來補。</p>
@@ -295,7 +298,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '點線上任一處：截掉前段或後段、新增點、改點的名稱。按住左右滑動可沿著線移動。': 'Tap anywhere on a line to trim the part before or after it, add a point, or rename a point. Hold and slide sideways to move along the line.',
     '點線上任一處開始編輯。': 'Tap a line to start editing.', '海拔': 'elev.', '從這裡開始（截掉前段）': 'Start here (trim before)', '到這裡結束（截掉後段）': 'End here (trim after)',
     '在這裡新增點': 'Add a point here', '點的名稱': 'Point name', '顯示在圖卡': 'Show on the card', '刪除這個點': 'Delete this point', '恢復全段': 'Restore full route',
-    '新的點': 'New point', '收起': 'Hide', '複製一條': 'Duplicate', '展開': 'Show', '往前': 'Back', '往後': 'Forward', '這裡太靠近另一端，至少要留 100 m。': 'Too close to the other end; keep at least 100 m.',
+    '新的點': 'New point', '收起': 'Hide', '收合': 'Collapse', '收合調整': 'Collapse settings', '複製一條': 'Duplicate', '展開': 'Show', '往前': 'Back', '往後': 'Forward', '這裡太靠近另一端，至少要留 100 m。': 'Too close to the other end; keep at least 100 m.',
     '加入 GPX 後，這裡會出現圖卡。': 'Add a GPX file to see the card here.',
     '下載 JPG': 'Download JPG',
     '分享圖片': 'Share',
@@ -1327,6 +1330,7 @@ details.help a{color:var(--accent);word-break:break-all}
           '<label class="ck"><input type="checkbox" data-k="inTable"' + (inTable(r) ? ' checked' : '') + '>' + esc(_t('列入坡度分級表')) + '</label>' +
           (ptsHtml ? '<div class="setrow"><span>' + esc(_t('圖上的點')) + '</span><div class="pts">' + ptsHtml + '</div>' + (isM ? '' : '<p class="hint">' + esc(_t('勾選的點會標在比較線上，附實際海拔。')) + '</p>') + '</div>' : '') +
           '<label class="field">' + esc(_t('備註（放在圖例下方）')) + '<textarea data-k="note" rows="3" placeholder="' + esc(_t('以「・」開頭的行是條列，其他行是小標題')) + '">' + esc(r.o.note || '') + '</textarea></label>' +
+          '<div class="adjend"><button type="button" class="btn ghost" data-act="fold" aria-label="' + esc(_t('收合調整')) + '">▲ ' + esc(_t('收合')) + '</button></div>' +
         '</div></details></div>';
     }).join('');
     ROUTES.forEach(function (r) {   // the range selects show the waypoint at each end, if one is there
@@ -1366,6 +1370,10 @@ details.help a{color:var(--accent);word-break:break-all}
   function onListClick(ev) {
     var bt = ev.target.closest('[data-act]'); if (!bt) return;
     var r = byEl(bt), act = bt.getAttribute('data-act'); if (!r) return;
+    if (act === 'fold') {   // close this route's settings and bring its header back into view
+      var dd = bt.closest('details'); if (dd) { dd.open = false; OPEN[r.id] = false; var hd = bt.closest('.rt'); if (hd && hd.getBoundingClientRect().top < 0) hd.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+      return;
+    }
     if (act === 'del') { ROUTES = ROUTES.filter(function (q) { return q !== r; }); }
     else if (act === 'main') { ROUTES = [r].concat(ROUTES.filter(function (q) { return q !== r; })); }
     else if (act === 'dup') {   // the same GPX again, to trim into another section (each copy's distance starts at 0)
@@ -2032,6 +2040,17 @@ details.help a{color:var(--accent);word-break:break-all}
   });
 })();
 </script>
+<script>(function(){   // 說明 as a header icon, left of Save
+  var bar=document.querySelector('.topbar .tbctl'),d=document.getElementById('introHelp');if(!bar||!d)return;
+  d.open=false;
+  var b=document.createElement('button');b.type='button';b.className='hbtn';b.id='helpBtn';b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','introHelp');
+  b.innerHTML='<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M7.9 7.7a2.2 2.2 0 1 1 3.2 2c-.7.4-1.1.9-1.1 1.7v.3"/><circle cx="10" cy="14.2" r=".45" fill="currentColor"/></svg>';
+  bar.insertBefore(b,bar.firstChild);
+  function t(){var en=(document.documentElement.lang||'').indexOf('en')===0;b.title=en?'Notes':'說明';b.setAttribute('aria-label',b.title)}
+  function s(){b.classList.toggle('on',d.open);b.setAttribute('aria-expanded',String(d.open))}
+  b.addEventListener('click',function(){d.open=!d.open;s()});
+  new MutationObserver(t).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});t();s();
+})()</script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="63c8bf83-5826-4ce5-bda6-06b1946cbe8b"></script>
 <script>(function(){var r=document.documentElement,b=document.getElementById("themeToggle");if(!b)return;var SUN='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',MOON='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>';function sync(){var d=r.getAttribute("data-theme")!=="light";b.innerHTML=d?SUN:MOON;var l=d?"切換為淺色模式 / Light mode":"切換為深色模式 / Dark mode";b.title=l;b.setAttribute("aria-label",l)}b.addEventListener("click",function(){var n=r.getAttribute("data-theme")==="light"?"dark":"light";r.setAttribute("data-theme",n);try{localStorage.setItem("theme",n)}catch(e){}sync();try{window.dispatchEvent(new CustomEvent("themechange",{detail:n}))}catch(e){}});sync()})()</script>
 </body></html>
