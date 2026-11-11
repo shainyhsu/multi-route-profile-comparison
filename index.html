@@ -319,7 +319,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '勾選的點會標在比較線上，附實際海拔。': 'Checked points are marked on the comparison line with their actual elevation.',
     '備註（放在圖例下方）': 'Notes (printed below the legend)',
     '以「・」開頭的行是條列，其他行是小標題': 'Lines starting with “・” become bullet points; other lines become headings.',
-    '起點': 'Start', '終點': 'End', '最高點': 'High point', '實走紀錄': 'Recorded', '規劃路線': 'Planned', '距離校正': 'scaled to posted distance',
+    '起點': 'Start', '終點': 'End', '目的': 'Destination', '最高點': 'High point', '實走紀錄': 'Recorded', '規劃路線': 'Planned', '距離校正': 'scaled to posted distance',
     '黑': 'Black', '朱紅': 'Vermilion', '藍': 'Blue', '綠': 'Green', '洋紅': 'Magenta', '紫': 'Purple', '金黃': 'Gold', '天藍': 'Sky blue', '棕': 'Brown', '灰': 'Gray',
     '已被「{0}」使用': 'In use by “{0}”',
     '不在圖上（圖上最多 10 條）': 'Not on the chart (10 routes max)', '畫在圖上': 'Show on the chart', '拖曳調整順序': 'Drag to reorder', '已用新檔案取代範例路線。': 'The sample routes were replaced by your files.',
@@ -729,7 +729,7 @@ details.help a{color:var(--accent);word-break:break-all}
     for (i = 0; i < b.cum.length; i++) if (b.hasE[i] && b.cum[i] >= Math.max(a, dA) && b.cum[i] <= Math.min(e, dB) && b.ele[i] > zmaxE) zmaxE = b.ele[i];
     var maxDup = mid.some(function (m) { return m.show && Math.abs(m.x - maxAt) < 150; });   // a named point already marks the top
     var startName = r.o.startName || (near0 && wname(near0)) || _t('起點');
-    var endName = r.o.endName || (near1 && wname(near1)) || (r === mainR() ? _t('終點') : r.name);
+    var endName = r.o.endName || (near1 && wname(near1)) || (r === mainR() ? _t('終點') : _t('目的'));
     return { x: X, z: Zs, len: L, raw: raw, gps: b.total, a: a, e: e, sc: sc, src: src, up: up, dn: dn, z0: Zs[0], z1: Zs[Zs.length - 1], zmin: zmin, zmax: zmax, zmaxE: zmaxE,
              net: Zs[Zs.length - 1] - Zs[0], steep: steep, steepD: steepD, cls: cls, ckm: ckm, km20: km20, km20d: km20d, mid: mid, startName: startName, endName: endName, scaled: r.o.real > 0,
              s300u: st3[0], s300d: st3[1], s1000u: st10[0], s1000d: st10[1], maxAt: maxAt, maxQ: maxQ, maxDup: maxDup,
@@ -1354,16 +1354,18 @@ details.help a{color:var(--accent);word-break:break-all}
     else return;
     refresh(true);
   }
-  function flipNames(r) {   // reversing swaps the start and end names, and "A→B" route names become "B→A"
+  function flipNames(r, whole) {   // reversing swaps the start and end names (typed or from a named point), and "A→B" route names become "B→A"
     var m = /^(.+?)\s*(→|⇀|->|－|—|–|~|～|-)\s*(.+)$/.exec(r.name), two = m && r.name.split(m[2]).length === 2 ? [m[1].trim(), m[3].trim()] : null;
-    var sN = r.o.startName, eN = r.o.endName;
-    r.o.startName = eN || ''; r.o.endName = sN || '';
-    if (two) { r.name = two[1] + m[2] + two[0]; remember(r); }
-    return two;   // the old start and end, for an end that has no named point of its own
+    var p = whole && r.p && !r.p.err ? r.p : null,   // a trimmed section's end names don't belong to the whole line
+        GEN = ['起點', '終點', '目的', 'Start', 'End', 'Destination'];
+    function real(v) { return v && GEN.indexOf(v) < 0 && v !== r.name ? v : ''; }
+    var sN = r.o.startName || (p ? real(p.startName) : ''), eN = r.o.endName || (p ? real(p.endName) : '');
+    if (two) { if (!sN) sN = two[0]; if (!eN) eN = two[1]; r.name = two[1] + m[2] + two[0]; remember(r); }
+    r.o.startName = eN; r.o.endName = sN;   // a nameless end stays blank and shows 目的 (End on the main route)
   }
   function onListChange(ev) {
     var el = ev.target, r = byEl(el), k = el.getAttribute('data-k'); if (!r || !k) return;
-    if (k === 'rev') { r.o.rev = el.checked; r.o.from = r.o.to = null; var two = flipNames(r); refresh(); if (two && r.p && !r.p.err) { if (!r.o.endName && r.p.endName === r.name) r.o.endName = two[0]; if (!r.o.startName && r.p.startName === _t('起點')) r.o.startName = two[1]; } }
+    if (k === 'rev') { var whole = r.o.from == null && r.o.to == null; r.o.rev = el.checked; r.o.from = r.o.to = null; flipNames(r, whole); }
     else if (k === 'dej') { r.o.dej = el.checked; r.o.from = r.o.to = null; }
     else if (k === 'fromSel') r.o.from = el.value === 's' ? null : wpKm(r, el.value);
     else if (k === 'toSel') r.o.to = el.value === 'e' ? null : wpKm(r, el.value);
