@@ -37,6 +37,7 @@ Copyright (c) 2026 Shainy Hsu. All rights reserved. See [LICENSE](LICENSE).
 
 Newest first. Times are Taiwan time (UTC+8). Also kept in [CHANGELOG.md](CHANGELOG.md).
 
+- V7 | 2026-11-11 11:25 | Save links are now short (about 90 characters): the save is encrypted in your browser, only the scrambled copy is stored online, and the key stays in the link, so whoever has the link can open it without signing in; the full link is used if the short one can't be made
 - V6 | 2026-11-11 10:07 | New license terms: free to use in a browser for personal, work, school or club use, and the results you make are yours to share; copying, paid services built on it, and AI training need written permission. A License link sits at the bottom of the page
 - V5 | 2026-11-11 09:15 | Save button: share or copy a save link, or download and open a .json file, to move the routes and settings to another device (it still autosaves in the browser)
 - V4 | 2026-11-10 23:15 | Trim right at a named point (the point becomes the new start or end); sliding along a line no longer snaps back to nearby points; Duplicate button adds the same GPX again so each copy can be trimmed to its own section, starting from 0 km
