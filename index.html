@@ -314,7 +314,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '簡稱（表格、坡度帶用）': 'Short name (for the table and grade bands)',
     '線型': 'Line style', '自動': 'Auto', '實線': 'Solid', '虛線': 'Dashed', '長虛線': 'Long dash', '點線': 'Dotted', '點虛線': 'Dash-dot', '雙點虛線': 'Dash-dot-dot', '長點虛線': 'Long dash-dot', '短虛線': 'Short dash', '長短虛線': 'Long-short dash', '三點虛線': 'Dash-dot-dot-dot', '雙虛線': 'Double dash',
     '揹負': 'Pack load', '不標示': 'None', '重裝': 'Full pack', '輕裝': 'Daypack', '例如：揹 13 kg': 'e.g., 13 kg pack',
-    '標了揹負的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」。': 'A route with a pack load gets a span arrow above the profile and a row under “Grade bands & pack load.”',
+    '標了揹負的路線，圖例下的長度對照會標出揹負，並列入「坡度帶與揹負」。': 'A route with a pack load shows it on its length bar in the legend, and gets a row under “Grade bands & pack load”.',
     '列入坡度分級表': 'Include in grade table',
     '勾選的點會標在比較線上，附實際海拔。': 'Checked points are marked on the comparison line with their actual elevation.',
     '備註（放在圖例下方）': 'Notes (printed below the legend)',
@@ -954,21 +954,6 @@ details.help a{color:var(--accent);word-break:break-all}
         return best.st;
       })(vtop - vbot, 8), EX = (PH / (vtop - vbot)) / (PWp / XMAX);
       y = secHead(b, y, _t('高度剖面'), _f('高度放大 {0} 倍，才看得出起伏', EX >= 10 ? Math.round(EX) : EX.toFixed(1)));
-      all.filter(loadOf).forEach(function (r) {   // the stretch each pack is carried, above the chart
-        var c = loadOf(r) === 'heavy' ? K.heavy : K.light, f = F(700, FS.label), x0 = sx(0), x1 = sx(r.p.len);
-        var sep = LANG === 'en' ? ' · ' : '　';
-        var lab = shortOf(r) + ' ' + ((r.o.loadText || '').trim() || _t(loadOf(r) === 'heavy' ? '重裝' : '輕裝')) + sep + km1(r.p.len) + ' km' + sep + '+' + nf(r.p.up) + slash() + '−' + nf(r.p.dn) + ' m';
-        var w = tw(lab, f), cx = (x0 + x1) / 2, tx = w > x1 - x0 ? x0 + w / 2 : cx;
-        y += FS.label * 1.25;
-        b.text(lab, Math.min(tx, X0 + CW - w / 2), y, f, c, 'center');
-        var ay = y + 5;
-        b.draw(function (g) {
-          g.strokeStyle = c; g.fillStyle = c; g.lineWidth = 1;
-          g.beginPath(); g.moveTo(x0 + 1, ay); g.lineTo(x1 - 1, ay); g.stroke();
-          [[x0, 1], [x1, -1]].forEach(function (q) { g.beginPath(); g.moveTo(q[0], ay); g.lineTo(q[0] + q[1] * 5, ay - 2.6); g.lineTo(q[0] + q[1] * 5, ay + 2.6); g.closePath(); g.fill(); });
-        });
-        y = ay + 3;
-      });
       var TOP = y + 10, BOT = TOP + PH;
       function sy(v) { return TOP + PH * (1 - (v - vbot) / (vtop - vbot)); }
       b.draw(function (g) {   // grid, height labels, axis title
@@ -1038,20 +1023,34 @@ details.help a{color:var(--accent);word-break:break-all}
       return b;
     }
 
-    // ---- legend: the comparison lines with their distance and climb ----
+    // ---- legend: each line with its distance and climb, and under it a bar of its length on the profile's km scale ----
     function blockLegend() {
       if (!any) return null;
-      var b = mk(), y = 2, f = F(400, FS.legend), lh = FS.legend * 1.55;
-      var kmS = comps.map(function (r) { return km1(r.p.len) + ' km'; }), udS = comps.map(function (r) { return '+' + nf(r.p.up) + (r.p.dn >= 0.5 ? slash() + '−' + nf(r.p.dn) : '') + ' m'; });
+      var b = mk(), y = 2, f = F(400, FS.legend), lh = FS.legend * 1.55, fB = F(700, FS.label), BH = FS.label * 1.5;
+      var kmS = all.map(function (r) { return km1(r.p.len) + ' km'; }), udS = all.map(function (r) { return '+' + nf(r.p.up) + (r.p.dn >= 0.5 ? slash() + '−' + nf(r.p.dn) : '') + ' m'; });
       var kmW = Math.max.apply(null, kmS.map(function (s) { return tw(s, f); })), udW = Math.max.apply(null, udS.map(function (s) { return tw(s, f); }));
       var nx = X0 + 36, nw = CW - 36 - kmW - udW - 26;
-      comps.forEach(function (r, i) {
-        var Ls = wrap(r.name, f, nw), ly = y + lh * 0.62;
-        b.draw(function (g) { g.beginPath(); g.moveTo(X0 + 1, ly); g.lineTo(X0 + 27, ly); strokeRoute(g, r, false, 1.6); });
+      all.forEach(function (r, i) {
+        var isM = r === M, Ls = wrap(r.name, f, nw), ly = y + lh * 0.62;
+        b.draw(function (g) { g.beginPath(); g.moveTo(X0 + 1, ly); g.lineTo(X0 + 27, ly); if (isM) { g.setLineDash([]); g.strokeStyle = K.ink; g.lineWidth = 1.8; g.stroke(); } else strokeRoute(g, r, false, 1.6); });
         Ls.forEach(function (s, k) { b.text(s, nx, y + lh * (k + 1) - lh * 0.3, f, K.ink); });
         b.text(kmS[i], X0 + CW - udW - 14, y + lh - lh * 0.3, f, K.ink, 'right');
         b.text(udS[i], X0 + CW, y + lh - lh * 0.3, f, K.ink, 'right');
-        y += lh * Ls.length + 1.5;
+        y += lh * Ls.length;
+        // length bar: same km scale as the profile above, in the pack colour when a load is marked
+        var ld = loadOf(r), c = ld ? (ld === 'heavy' ? K.heavy : K.light) : (isM ? K.ink : textCol(col(r)));
+        var x0 = sx(0), x1 = sx(r.p.len), ay = y + BH * 0.5;
+        b.draw(function (g) {
+          g.strokeStyle = c; g.fillStyle = c; g.lineWidth = 1; g.setLineDash([]);
+          g.beginPath(); g.moveTo(x0 + 1, ay); g.lineTo(x1 - 1, ay); g.stroke();
+          [[x0, 1], [x1, -1]].forEach(function (q) { g.beginPath(); g.moveTo(q[0], ay); g.lineTo(q[0] + q[1] * 5, ay - 2.6); g.lineTo(q[0] + q[1] * 5, ay + 2.6); g.closePath(); g.fill(); });
+        });
+        if (ld) {
+          var lab = (r.o.loadText || '').trim() || _t(ld === 'heavy' ? '重裝' : '輕裝'), w = tw(lab, fB);
+          if (x1 + 6 + w <= X0 + CW) b.text(lab, x1 + 6, ay + FS.label * 0.35, fB, c);
+          else b.text(lab, x1 - 8, ay - 3, fB, c, 'right');
+        }
+        y += BH + 3;
       });
       b.h = y + 2;
       return b;
@@ -1311,7 +1310,7 @@ details.help a{color:var(--accent);word-break:break-all}
       }
       var dashSel = isM ? '' : '<label class="field">' + esc(_t('線型')) + '<select data-k="dash">' + DASH_NAME.map(function (o) { return '<option value="' + o[0] + '"' + ((r.o.dash || 'auto') === o[0] ? ' selected' : '') + '>' + esc(_t(o[1])) + (o[0] === 'auto' ? paren(esc(_t(DASH_NAME.filter(function (q) { return q[0] === AUTO_DASH[r.color >= 0 ? r.color : 0]; })[0][1]))) : '') + '</option>'; }).join('') + '</select></label>';
       var loadSel = '<div class="setrow"><span>' + esc(_t('揹負')) + '</span><div class="inline"><select data-k="loadType" aria-label="' + esc(_t('揹負')) + '">' + [['none', '不標示'], ['heavy', '重裝'], ['light', '輕裝']].map(function (o) { return '<option value="' + o[0] + '"' + ((r.o.loadType || 'none') === o[0] ? ' selected' : '') + '>' + esc(_t(o[1])) + '</option>'; }).join('') + '</select>' +
-        '<input type="text" class="grow" data-k="loadText" value="' + esc(r.o.loadText || '') + '" placeholder="' + esc(_t('例如：揹 13 kg')) + '" aria-label="' + esc(_t('揹負')) + '"></div><p class="hint">' + esc(_t('標了揹負的路線，剖面上方會畫出它的距離，並列入「坡度帶與揹負」。')) + '</p></div>';
+        '<input type="text" class="grow" data-k="loadText" value="' + esc(r.o.loadText || '') + '" placeholder="' + esc(_t('例如：揹 13 kg')) + '" aria-label="' + esc(_t('揹負')) + '"></div><p class="hint">' + esc(_t('標了揹負的路線，圖例下的長度對照會標出揹負，並列入「坡度帶與揹負」。')) + '</p></div>';
       return '<div class="rt' + (isM ? ' main' : '') + (onCard(r) ? '' : ' off') + '" data-id="' + r.id + '">' +
         '<div class="rt-head"><button type="button" class="grip" data-grip="1" aria-label="' + esc(_t('拖曳調整順序')) + '" title="' + esc(_t('拖曳調整順序')) + '"><span class="no">' + (ri + 1) + '</span><svg viewBox="0 0 10 16" aria-hidden="true"><circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/></svg></button>' + lineTile(r, isM, 'rt-sw') + '<input class="nm" type="text" data-k="name" value="' + esc(r.name) + '" aria-label="' + esc(_t('路線名稱')) + '">' +
         '<button type="button" class="iconbtn" data-act="del" aria-label="' + esc(_t('移除這條路線')) + '" title="' + esc(_t('移除這條路線')) + '">' + TRASH + '</button></div>' +

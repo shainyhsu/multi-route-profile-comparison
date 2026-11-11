@@ -37,6 +37,7 @@ Copyright (c) 2026 Shainy Hsu. All rights reserved. See [LICENSE](LICENSE).
 
 Newest first. Times are Taiwan time (UTC+8). Also kept in [CHANGELOG.md](CHANGELOG.md).
 
+- V11 | 2026-11-11 16:55 | Card legend now lists every route (main route first), each with a length bar under it on the same km scale as the profile, showing the pack load; the span arrows above the elevation profile are gone
 - V10 | 2026-11-11 16:40 | Reverse now swaps the start and end names on every route (typed names and named points), and a route named like "A-B" or "A→B" becomes "B-A"; an end with no name is labeled Destination (目的) instead of the route name
 - V9 | 2026-11-11 16:20 | Notes moved to a ? button in the header, next to Save; each route's settings now end with a Collapse button, so you don't have to scroll back up to close them
 - V8 | 2026-11-11 11:45 | Pasting a save link into a tab that already has the page open now loads it too (before, only a fresh open did)
