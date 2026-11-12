@@ -2,6 +2,7 @@
 
 Newest first. Each update of the page is one version. Times are Taiwan time (UTC+8).
 
+- V15 | 2026-11-12 23:15 | Profile editor can zoom: + and − buttons (or a two-finger spread on a phone) show a shorter stretch with its own height scale, so taps land where you mean; sliding to the edge scrolls along, ◀▶ steps get finer, and "Show all" goes back
 - V14 | 2026-11-12 21:20 | Mirror: points on the way back now take the name and on/off setting of the same point on the way out (rename either one and both change), and the high point is marked on the way back at its mirrored spot
 - V13 | 2026-11-12 20:25 | Mirror fixes: the old end becomes a turnaround point in the middle (named by the end name, or Turnaround), the end always shows the start name, and points you added on the one-way line now show on the way back too
 - V12 | 2026-11-12 19:30 | Mirror option next to Reverse: the route comes back the same way, so the line ends where it started and named points show on the way out and back; on phones the docked profile editor now always opens expanded, and when hidden it shows a large colored "Open profile editor" button

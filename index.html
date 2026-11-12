@@ -168,7 +168,12 @@ details.help a{color:var(--accent);word-break:break-all}
   #editCard.fold .dock-b{flex:1 1 auto;min-height:50px;font-size:1.02rem;font-weight:700;background:var(--accent);border-color:var(--accent);color:#fff;border-radius:10px}
   body.edock .wrap{padding-bottom:calc(var(--edh,0px) + 16px)}
 }
-.edwrap{min-width:0}
+.edwrap{min-width:0;position:relative}
+.edzoom{display:flex;align-items:center;gap:6px;margin-top:6px}
+.edzoom .zb{min-width:44px;min-height:40px;padding:0 10px;border:1px solid var(--ctl-line);border-radius:8px;background:transparent;color:var(--ink);font:700 1.1rem/1 var(--font-ui);cursor:pointer}
+.edzoom .zb:disabled{opacity:.4;cursor:default}
+.edzoom .zb.zall{font-size:.9rem;font-weight:600;margin-left:auto}
+.edzoom .zl{min-width:4.5em;text-align:center;font-family:var(--font-num),var(--font-ui);font-weight:600;color:var(--ink2);font-size:.9rem}
 #edCv{display:block;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}
 .edp{display:grid;gap:8px;min-width:0}
 .ed-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
@@ -224,8 +229,8 @@ details.help a{color:var(--accent);word-break:break-all}
     <div class="col">
     <section class="card" id="editCard" aria-labelledby="hEdit" hidden>
       <div class="ed-top"><h2 id="hEdit">剖面編輯</h2><button type="button" class="dock-b" id="edFold" hidden>收起</button></div>
-      <p class="hint edhint">點線上任一處：截掉前段或後段、新增點、改點的名稱。按住左右滑動可沿著線移動。</p>
-      <div class="edwrap"><canvas id="edCv" aria-label="剖面編輯"></canvas></div>
+      <p class="hint edhint">點線上任一處：截掉前段或後段、新增點、改點的名稱。按住左右滑動可沿著線移動。按＋放大（或兩指撐開）再點，位置比較準。</p>
+      <div class="edwrap"><canvas id="edCv" aria-label="剖面編輯"></canvas><div class="edzoom"><button type="button" class="zb" id="edZout" aria-label="縮小">－</button><span class="zl" id="edZl">全段</span><button type="button" class="zb" id="edZin" aria-label="放大">＋</button><button type="button" class="zb zall" id="edZall">看全段</button></div></div>
       <div class="edp" id="edPanel"></div>
     </section>
 
@@ -299,7 +304,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '預覽': 'Preview', '圖卡設定與預覽': 'Card settings & preview', '剖面編輯': 'Profile editor',
     '點線上任一處：截掉前段或後段、新增點、改點的名稱。按住左右滑動可沿著線移動。': 'Tap anywhere on a line to trim the part before or after it, add a point, or rename a point. Hold and slide sideways to move along the line.',
     '點線上任一處開始編輯。': 'Tap a line to start editing.', '海拔': 'elev.', '從這裡開始（截掉前段）': 'Start here (trim before)', '到這裡結束（截掉後段）': 'End here (trim after)',
-    '在這裡新增點': 'Add a point here', '點的名稱': 'Point name', '顯示在圖卡': 'Show on the card', '刪除這個點': 'Delete this point', '恢復全段': 'Restore full route',
+    '在這裡新增點': 'Add a point here', '縮小': 'Zoom out', '放大': 'Zoom in', '全段': 'Whole', '看全段': 'Show all', '按＋放大（或兩指撐開）再點，位置比較準。': 'Tap + to zoom in (or spread two fingers) for a more exact spot.', '點的名稱': 'Point name', '顯示在圖卡': 'Show on the card', '刪除這個點': 'Delete this point', '恢復全段': 'Restore full route',
     '新的點': 'New point', '收起': 'Hide', '收合': 'Collapse', '收合調整': 'Collapse settings', '複製一條': 'Duplicate', '展開': 'Show', '▲ 展開剖面編輯（加點、截斷、改名）': '▲ Open profile editor (add points, trim, rename)', '▼ 收起': '▼ Hide', '往前': 'Back', '往後': 'Forward', '這裡太靠近另一端，至少要留 100 m。': 'Too close to the other end; keep at least 100 m.',
     '加入 GPX 後，這裡會出現圖卡。': 'Add a GPX file to see the card here.',
     '下載 JPG': 'Download JPG',
@@ -1517,7 +1522,8 @@ details.help a{color:var(--accent);word-break:break-all}
   }
 
   // ================= live profile editor: tap a line to trim it, add a point or rename one =================
-  var SEL = null, ED = null, EDRAG = false;   // SEL: { id: route id, x: metres along the drawn line, pt: point key or null }
+  var SEL = null, ED = null, EDRAG = false, EDV = null;   // EDV: zoomed window {a, b} in metres, null = whole
+    // SEL: { id: route id, x: metres along the drawn line, pt: point key or null }
   function edRoutes() { return shown().filter(function (r) { return r.p && !r.p.err; }); }
   function edRoute() { if (!SEL) return null; var r = edRoutes().filter(function (q) { return q.id === SEL.id; })[0]; return r || null; }
   function edKey(r, k) { var m = r.p && r.p.mid ? r.p.mid.filter(function (q) { return q.id === k; })[0] : null; return m && m.nk ? m.nk : k; }
@@ -1537,24 +1543,29 @@ details.help a{color:var(--accent);word-break:break-all}
     var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
     var fs = W < 420 ? 11 : 12, font = function (w) { return w + ' ' + fs + 'px ' + fUI(); };
     var maxLen = Math.max.apply(null, rs.map(function (r) { return r.p.len; })), vmin = Infinity, vmax = -Infinity;
-    rs.forEach(function (r) { r.p.z.forEach(function (v) { v -= r.p.z0; if (v < vmin) vmin = v; if (v > vmax) vmax = v; }); });
-    var span = Math.max(vmax - vmin, 100), vtop = vmax + span * 0.14, vbot = vmin - span * 0.05;
+    if (EDV && EDV.b - EDV.a >= maxLen * 0.98) EDV = null;
+    var va = 0, vb = maxLen;
+    if (EDV) { var spn = Math.min(EDV.b - EDV.a, maxLen); va = clamp(EDV.a, 0, maxLen - spn); vb = va + spn; EDV = { a: va, b: vb }; }
+    rs.forEach(function (r) { r.p.z.forEach(function (v, i) { var xi = r.p.x[i]; if (EDV && (xi < va - 30 || xi > vb + 30)) return; v -= r.p.z0; if (v < vmin) vmin = v; if (v > vmax) vmax = v; }); });
+    if (!isFinite(vmin)) { vmin = 0; vmax = 100; }
+    var span = Math.max(vmax - vmin, EDV ? 20 : 100), vtop = vmax + span * 0.14, vbot = vmin - span * 0.05;
     g.font = font(400);
-    var ystep = niceStep(vtop - vbot, 6, [20, 50, 100, 200, 250, 500, 1000, 2000]), lw = 0;
+    var ystep = niceStep(vtop - vbot, 6, [5, 10, 20, 50, 100, 200, 250, 500, 1000, 2000]), lw = 0;
     for (var v = Math.ceil(vbot / ystep) * ystep; v <= vtop; v += ystep) lw = Math.max(lw, g.measureText(signed(v)).width);
     var PL = lw + 10, PR = 12, PT = 10, PB = fs + 12, PW = W - PL - PR, PH = H - PT - PB;
-    function sx(x) { return PL + PW * x / maxLen; }
+    function sx(x) { return PL + PW * (x - va) / (vb - va); }
     function sy(v) { return PT + PH * (vtop - v) / (vtop - vbot); }
     g.lineWidth = 1; g.textBaseline = 'middle';
     for (v = Math.ceil(vbot / ystep) * ystep; v <= vtop; v += ystep) {
       g.strokeStyle = v === 0 ? K.zero : K.grid; g.beginPath(); g.moveTo(PL, Math.round(sy(v)) + 0.5); g.lineTo(W - PR, Math.round(sy(v)) + 0.5); g.stroke();
       g.fillStyle = K.muted; g.textAlign = 'right'; g.fillText(signed(v), PL - 5, sy(v));
     }
-    var xstep = niceStep(maxLen, 8, [500, 1000, 2000, 5000, 10000, 20000]);
+    var xstep = niceStep(vb - va, W < 420 ? 6 : 8, [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]);
     g.textAlign = 'center'; g.textBaseline = 'top';
-    for (var kx = 0; kx <= maxLen + 1; kx += xstep) g.fillText(xstep < 1000 ? (kx / 1000).toFixed(1) : String(kx / 1000), sx(kx), H - PB + 5);
+    for (var kx = Math.ceil(va / xstep) * xstep; kx <= vb + 1; kx += xstep) { var tx = sx(kx); if (tx > W - PR - 22) continue; g.fillText(xstep < 100 ? (kx / 1000).toFixed(2) : xstep < 1000 ? (kx / 1000).toFixed(1) : String(kx / 1000), tx, H - PB + 5); }
     g.textAlign = 'right'; g.fillText('km', W - PR, H - PB + 5);
     var M = mainR();
+    g.save(); g.beginPath(); g.rect(PL - 8, 0, PW + 16, H - PB); g.clip();
     rs.slice().reverse().forEach(function (r) {
       var p = r.p, isM = r === M, c = PAL[r.color >= 0 ? r.color : 0];
       g.beginPath();
@@ -1569,6 +1580,7 @@ details.help a{color:var(--accent);word-break:break-all}
       var c = PAL[r.color >= 0 ? r.color : 0];
       edPts(r).forEach(function (m) {
         var X = sx(m.x), Y = sy(zAt(r.p.x, r.p.z, m.x) - r.p.z0);
+        if (X < PL - 8 || X > W - PR + 8) return;
         g.beginPath(); g.arc(X, Y, m.show ? 3.6 : 2.6, 0, Math.PI * 2);
         g.fillStyle = '#ffffff'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = m.show ? textCol(c) : '#9aa59e'; g.stroke();
         if (m.show && (m.key !== 's' || r === M)) {
@@ -1577,15 +1589,34 @@ details.help a{color:var(--accent);word-break:break-all}
         }
       });
     });
-    ED = { sx: sx, sy: sy, inv: function (px) { return clamp((px - PL) / PW * maxLen, 0, maxLen); }, rs: rs, maxLen: maxLen };
+    g.restore();
+    ED = { sx: sx, sy: sy, inv: function (px) { return clamp(va + (px - PL) / PW * (vb - va), 0, maxLen); }, rs: rs, maxLen: maxLen, va: va, vb: vb, PL: PL, PW: PW };
+    edZoomUi();
     var r0 = edRoute();
     if (r0) {
-      var xs = clamp(SEL.x, 0, r0.p.len), X0 = sx(xs), Y0 = sy(zAt(r0.p.x, r0.p.z, xs) - r0.p.z0);
+      var xs = clamp(SEL.x, 0, r0.p.len), X0 = clamp(sx(xs), PL, W - PR), Y0 = sy(zAt(r0.p.x, r0.p.z, xs) - r0.p.z0);
       g.strokeStyle = '#2f7d57'; g.lineWidth = 1; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(Math.round(X0) + 0.5, PT); g.lineTo(Math.round(X0) + 0.5, H - PB); g.stroke(); g.setLineDash([]);
       g.beginPath(); g.arc(X0, Y0, 7, 0, Math.PI * 2); g.lineWidth = 2.4; g.strokeStyle = '#2f7d57'; g.stroke();
       g.beginPath(); g.arc(X0, Y0, 2.4, 0, Math.PI * 2); g.fillStyle = '#2f7d57'; g.fill();
     }
   }
+  function edZoomUi() {
+    var zl = $('edZl'); if (!zl || !ED) return;
+    var f = ED.maxLen / (ED.vb - ED.va);
+    zl.textContent = EDV ? '×' + (f < 10 ? f.toFixed(1).replace(/\.0$/, '') : Math.round(f)) : _t('全段');
+    $('edZall').hidden = !EDV; $('edZout').disabled = !EDV;
+    $('edZin').disabled = !!EDV && ED.vb - ED.va <= 201;
+  }
+  function edZoom(f, cx) {   // f < 1 zooms in; cx: the metre kept in place (defaults to the selection, else the middle)
+    if (!ED) return;
+    var a = ED.va, b = ED.vb, sp = b - a, ns = clamp(sp * f, 200, ED.maxLen);
+    if (cx === undefined || cx === null) { var r = edRoute(); cx = r && SEL && SEL.x >= a && SEL.x <= b ? SEL.x : (a + b) / 2; }
+    var t = sp > 0 ? (cx - a) / sp : 0.5, na = cx - t * ns;
+    EDV = ns >= ED.maxLen * 0.98 ? null : { a: clamp(na, 0, ED.maxLen - ns), b: 0 };
+    if (EDV) EDV.b = EDV.a + ns;
+    drawEdit();
+  }
+  function edPan(dm) { if (!EDV || !ED) return; var sp = ED.vb - ED.va; EDV = { a: clamp(ED.va + dm, 0, ED.maxLen - sp), b: 0 }; EDV.b = EDV.a + sp; drawEdit(); }
   function edDocked() { return !!(window.matchMedia && window.matchMedia('(max-width: 979px) and (orientation: portrait)').matches); }
   var EDFOLD = false;   // the docked editor always opens expanded
   function edDockSize() {
@@ -1645,15 +1676,43 @@ details.help a{color:var(--accent);word-break:break-all}
     var cv = $('edCv'), box = $('edPanel');
     $('edFold').addEventListener('click', function () { EDFOLD = !EDFOLD; if (!EDFOLD) drawEdit(); edDockSize(); });
     function pos(e) { var b = cv.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; }
+    $('edZin').addEventListener('click', function () { edZoom(0.5); });
+    $('edZout').addEventListener('click', function () { edZoom(2); });
+    $('edZall').addEventListener('click', function () { EDV = null; drawEdit(); });
+    cv.addEventListener('wheel', function (e) { if (!ED || !(e.ctrlKey || e.altKey)) return; e.preventDefault(); edZoom(e.deltaY < 0 ? 0.8 : 1.25, ED.inv(pos(e)[0])); }, { passive: false });
+    var PTRS = {}, PINCH = null;
+    function pinchOn() {
+      var ks = Object.keys(PTRS); if (ks.length !== 2 || !ED) return;
+      var p0 = PTRS[ks[0]], p1 = PTRS[ks[1]], d = Math.abs(p0[0] - p1[0]);
+      PINCH = { d: Math.max(d, 30), a: ED.va, b: ED.vb, cx: ED.inv((p0[0] + p1[0]) / 2), t: ((p0[0] + p1[0]) / 2 - ED.PL) / ED.PW };
+      EDRAG = false;
+    }
+    cv.addEventListener('pointerdown', function (e) { PTRS[e.pointerId] = pos(e); if (Object.keys(PTRS).length === 2) pinchOn(); }, true);
+    cv.addEventListener('pointermove', function (e) {
+      if (!(e.pointerId in PTRS)) return;
+      PTRS[e.pointerId] = pos(e);
+      if (!PINCH) return;
+      var ks = Object.keys(PTRS); if (ks.length < 2) return;
+      var p0 = PTRS[ks[0]], p1 = PTRS[ks[1]], d = Math.max(Math.abs(p0[0] - p1[0]), 30);
+      var ns = clamp((PINCH.b - PINCH.a) * PINCH.d / d, 200, ED.maxLen), t = clamp(PINCH.t, 0, 1);
+      EDV = ns >= ED.maxLen * 0.98 ? null : { a: clamp(PINCH.cx - t * ns, 0, ED.maxLen - ns), b: 0 };
+      if (EDV) EDV.b = EDV.a + ns;
+      drawEdit();
+    }, true);
+    function ptrOff(e) { delete PTRS[e.pointerId]; if (Object.keys(PTRS).length < 2) PINCH = null; }
+    cv.addEventListener('pointerup', ptrOff, true); cv.addEventListener('pointercancel', ptrOff, true);
     cv.addEventListener('pointerdown', function (e) {
+      if (PINCH) return;
       var q = pos(e), h = edHit(q[0], q[1]); if (!h) return;
       SEL = { id: h.id, x: h.x, pt: h.pt }; EDRAG = true;
       try { cv.setPointerCapture(e.pointerId); } catch (er) {}
       drawEdit(); renderEdit();
     });
     cv.addEventListener('pointermove', function (e) {
-      if (!EDRAG || !SEL) return;
-      var q = pos(e), h = edHit(q[0], q[1], SEL.id, true); if (!h) return;
+      if (!EDRAG || !SEL || PINCH) return;
+      var q = pos(e);
+      if (EDV && ED) { var sp = ED.vb - ED.va; if (q[0] < ED.PL + 6) edPan(-sp * 0.03); else if (q[0] > ED.PL + ED.PW - 6) edPan(sp * 0.03); }
+      var h = edHit(q[0], q[1], SEL.id, true); if (!h) return;
       SEL.x = h.x; SEL.pt = h.pt; drawEdit(); renderEdit();
     });
     function up() { EDRAG = false; }
@@ -1684,7 +1743,7 @@ details.help a{color:var(--accent);word-break:break-all}
         var w0 = r.wpts[+String(SEL.pt).split(':')[0]]; if (w0) w0.gone = true;
         r._b = null; edApply(function () { SEL.pt = null; });
       } else if (a === 'prev' || a === 'next') {
-        var st = Math.max(20, Math.round(ED.maxLen / 300 / 10) * 10);
+        var st = Math.max(10, Math.round((ED.vb - ED.va) / 300 / 10) * 10);
         SEL.x = clamp(SEL.x + (a === 'next' ? st : -st), 0, p.len); SEL.pt = null;
         drawEdit(); renderEdit();
       } else if (a === 'full') {
