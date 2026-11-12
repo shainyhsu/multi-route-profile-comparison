@@ -1240,6 +1240,29 @@ details.help a{color:var(--accent);word-break:break-all}
       });
       pages = paginate(order());
     }
+    var SH = 1, ends = [];
+    function paginateS(list, s) {   // V17: the same with the content shrunk to s, centred; remembers where each page ends
+      var out = [], cur = null, y = 0; ends = [];
+      function newPage() { if (cur) ends.push(y - GAP * s); cur = []; out.push(cur); y = TOPY + (out.length > 1 ? RUN : 0); }
+      newPage();
+      list.forEach(function (bk) {
+        if (y + bk.h * s > BOTY - FOOT && cur.length) newPage();
+        cur.push({ bk: bk, y: y });
+        y += (bk.h + GAP) * s;
+      });
+      ends.push(y - GAP * s);
+      return out;
+    }
+    pages = paginateS(order(), 1);
+    if (pages.length > 1) {   // V17: a little over: shrink onto one page fewer
+      var n1 = pages.length;
+      for (var s9 = 0.98; s9 > 0.81; s9 -= 0.02) { var t9 = paginateS(order(), s9); if (t9.length < n1) { SH = s9; pages = t9; break; } }
+      if (SH === 1) pages = paginateS(order(), 1);
+    }
+    pages.forEach(function (pg, pi) {   // V17: spread the room left on a page between its blocks, unless the page is mostly empty
+      var top = pi ? TOPY + RUN : TOPY, lim = BOTY - FOOT, spare = lim - ends[pi];
+      if (pg.length > 1 && spare > 0 && spare <= 0.35 * (lim - top)) pg.forEach(function (e, j) { e.y += spare * j / (pg.length - 1); });
+    });
     var N = pages.length, foot = _t('路線剖面比較 © 2026 shainyhsu'), CS = (window.__savekit && window.__savekit.stamp ? window.__savekit.stamp() : null);
     return {
       W: PWd, H: PHd, n: N, EX: prof1.EX,
@@ -1252,7 +1275,7 @@ details.help a{color:var(--accent);word-break:break-all}
           var rt = D.title + _t('（續）'); while (tw(rt, F(400, FS.sub)) > CW && rt.length > 4) rt = rt.slice(0, -4) + '…' + _t('（續）');
           g.fillText(rt, X0, TOPY + 9); g.fillStyle = K.line; g.fillRect(X0, TOPY + 14, CW, 0.6);
         }
-        pages[i].forEach(function (e) { g.save(); g.translate(0, e.y); e.bk.ops.forEach(function (f) { g.save(); f(g); g.restore(); }); g.restore(); });
+        pages[i].forEach(function (e) { g.save(); g.translate((X0 + CW / 2) * (1 - SH), e.y); g.scale(SH, SH); e.bk.ops.forEach(function (f) { g.save(); f(g); g.restore(); }); g.restore(); });
         g.fillStyle = K.line; g.fillRect(X0, BOTY - FOOT + 4, CW, 0.6);
         g.font = F(400, FS.foot); g.fillStyle = K.ink2; g.textBaseline = 'alphabetic';
         var ft = foot, pgw = N > 1 ? 40 : 0;   // V16: the case and version, and the link to the newest when it fits

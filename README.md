@@ -37,6 +37,7 @@ Copyright (c) 2026 Shainy Hsu. All rights reserved. See [LICENSE](LICENSE).
 
 Newest first. Times are Taiwan time (UTC+8). Also kept in [CHANGELOG.md](CHANGELOG.md).
 
+- V17 | 2026-11-13 07:40 | The A4 share picture fills its pages: when it runs just over a page (up to about 18%), the whole layout is shrunk to fit one page fewer, and the room left on a nearly full page is spread between its parts instead of sitting blank at the bottom
 - V16 | 2026-11-13 01:40 | One link per comparison: sharing again after changes asks whether to update the old link (everyone who has it opens the new version) or make a new one. The save panel and picture footer show the case code, version and time
 - V15 | 2026-11-12 23:15 | Profile editor can zoom: + and − buttons (or a two-finger spread on a phone) show a shorter stretch with its own height scale, so taps land where you mean; sliding to the edge scrolls along, ◀▶ steps get finer, and "Show all" goes back
 - V14 | 2026-11-12 21:20 | Mirror: points on the way back now take the name and on/off setting of the same point on the way out (rename either one and both change), and the high point is marked on the way back at its mirrored spot
