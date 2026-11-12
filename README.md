@@ -7,7 +7,6 @@ Put the distance–elevation profiles of several hiking routes on one chart and 
 ## Features
 
 - Load any number of GPX, KML or KMZ files; the chart draws the top 10 (each route can also be left off the chart). The first is the main route, shaded by grade every 100 m; drag a route by its handle to reorder the list or make it the main route
-- V16 | 2026-11-13 01:40 | One link per comparison: sharing again after changes asks whether to update the old link (everyone who has it opens the new version) or make a new one. The save panel and picture footer show the case code, version and time
 - Vertical axis is the elevation relative to the start: every line begins at 0 km and 0 m, so the chart compares steepness and length; actual elevations are written next to the place names (start, high point and end of the main route, end of every other route)
 - Elevations come straight from each GPX file; only points without elevation data are filled in from the Ministry of the Interior’s 20 m digital terrain model (Taiwan)
 - High-contrast line colors for screens, plus a distinct dash pattern for every comparison line so the chart still reads on a black-and-white laser printer; light colors get a dark outline, lines get a white edge where they cross the grade bands, and labels over the bands sit in framed boxes
@@ -38,6 +37,7 @@ Copyright (c) 2026 Shainy Hsu. All rights reserved. See [LICENSE](LICENSE).
 
 Newest first. Times are Taiwan time (UTC+8). Also kept in [CHANGELOG.md](CHANGELOG.md).
 
+- V16 | 2026-11-13 01:40 | One link per comparison: sharing again after changes asks whether to update the old link (everyone who has it opens the new version) or make a new one. The save panel and picture footer show the case code, version and time
 - V15 | 2026-11-12 23:15 | Profile editor can zoom: + and − buttons (or a two-finger spread on a phone) show a shorter stretch with its own height scale, so taps land where you mean; sliding to the edge scrolls along, ◀▶ steps get finer, and "Show all" goes back
 - V14 | 2026-11-12 21:20 | Mirror: points on the way back now take the name and on/off setting of the same point on the way out (rename either one and both change), and the high point is marked on the way back at its mirrored spot
 - V13 | 2026-11-12 20:25 | Mirror fixes: the old end becomes a turnaround point in the middle (named by the end name, or Turnaround), the end always shows the start name, and points you added on the one-way line now show on the way back too
