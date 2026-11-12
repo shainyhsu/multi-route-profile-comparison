@@ -163,7 +163,9 @@ details.help a{color:var(--accent);word-break:break-all}
 @media (max-width:979px) and (orientation:portrait){
   #editCard{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;border-radius:14px 14px 0 0;border-bottom:0;max-height:66vh;overflow:auto;overscroll-behavior:contain;padding:8px max(10px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));gap:6px;box-shadow:0 -6px 20px var(--shadow)}
   #editCard .edhint{display:none}
-  #editCard.fold .edwrap,#editCard.fold .edp{display:none}
+  #editCard.fold .edwrap,#editCard.fold .edp,#editCard.fold .ed-top h2{display:none}
+  #editCard.fold{padding-top:10px;border-top:3px solid var(--accent)}
+  #editCard.fold .dock-b{flex:1 1 auto;min-height:50px;font-size:1.02rem;font-weight:700;background:var(--accent);border-color:var(--accent);color:#fff;border-radius:10px}
   body.edock .wrap{padding-bottom:calc(var(--edh,0px) + 16px)}
 }
 .edwrap{min-width:0}
@@ -298,7 +300,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '點線上任一處：截掉前段或後段、新增點、改點的名稱。按住左右滑動可沿著線移動。': 'Tap anywhere on a line to trim the part before or after it, add a point, or rename a point. Hold and slide sideways to move along the line.',
     '點線上任一處開始編輯。': 'Tap a line to start editing.', '海拔': 'elev.', '從這裡開始（截掉前段）': 'Start here (trim before)', '到這裡結束（截掉後段）': 'End here (trim after)',
     '在這裡新增點': 'Add a point here', '點的名稱': 'Point name', '顯示在圖卡': 'Show on the card', '刪除這個點': 'Delete this point', '恢復全段': 'Restore full route',
-    '新的點': 'New point', '收起': 'Hide', '收合': 'Collapse', '收合調整': 'Collapse settings', '複製一條': 'Duplicate', '展開': 'Show', '往前': 'Back', '往後': 'Forward', '這裡太靠近另一端，至少要留 100 m。': 'Too close to the other end; keep at least 100 m.',
+    '新的點': 'New point', '收起': 'Hide', '收合': 'Collapse', '收合調整': 'Collapse settings', '複製一條': 'Duplicate', '展開': 'Show', '▲ 展開剖面編輯（加點、截斷、改名）': '▲ Open profile editor (add points, trim, rename)', '▼ 收起': '▼ Hide', '往前': 'Back', '往後': 'Forward', '這裡太靠近另一端，至少要留 100 m。': 'Too close to the other end; keep at least 100 m.',
     '加入 GPX 後，這裡會出現圖卡。': 'Add a GPX file to see the card here.',
     '下載 JPG': 'Download JPG',
     '分享圖片': 'Share',
@@ -1562,7 +1564,7 @@ details.help a{color:var(--accent);word-break:break-all}
   var EDFOLD = false;   // the docked editor always opens expanded
   function edDockSize() {
     var card = $('editCard'), on = edDocked() && !card.hidden, fb = $('edFold');
-    fb.hidden = !on; fb.textContent = _t(EDFOLD ? '展開' : '收起'); card.classList.toggle('fold', on && EDFOLD);
+    fb.hidden = !on; fb.textContent = _t(EDFOLD ? '▲ 展開剖面編輯（加點、截斷、改名）' : '▼ 收起'); card.classList.toggle('fold', on && EDFOLD);
     document.body.classList.toggle('edock', on);
     document.documentElement.style.setProperty('--edh', (on ? card.offsetHeight : 0) + 'px');
   }

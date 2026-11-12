@@ -37,7 +37,7 @@ Copyright (c) 2026 Shainy Hsu. All rights reserved. See [LICENSE](LICENSE).
 
 Newest first. Times are Taiwan time (UTC+8). Also kept in [CHANGELOG.md](CHANGELOG.md).
 
-- V12 | 2026-11-12 19:30 | Mirror option next to Reverse: the route comes back the same way, so the line ends where it started and named points show on the way out and back; on phones the docked profile editor now always opens expanded
+- V12 | 2026-11-12 19:30 | Mirror option next to Reverse: the route comes back the same way, so the line ends where it started and named points show on the way out and back; on phones the docked profile editor now always opens expanded, and when hidden it shows a large colored "Open profile editor" button
 - V11 | 2026-11-11 16:55 | Card legend now lists every route (main route first), each with a length bar under it on the same km scale as the profile, showing the pack load; the span arrows above the elevation profile are gone
 - V10 | 2026-11-11 16:40 | Reverse now swaps the start and end names on every route (typed names and named points), and a route named like "A-B" or "A→B" becomes "B-A"; an end with no name is labeled Destination (目的) instead of the route name
 - V9 | 2026-11-11 16:20 | Notes moved to a ? button in the header, next to Save; each route's settings now end with a Collapse button, so you don't have to scroll back up to close them
