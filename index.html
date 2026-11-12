@@ -310,7 +310,7 @@ details.help a{color:var(--accent);word-break:break-all}
     '主路線': 'Main route', '設為主路線': 'Set as main route', '移除這條路線': 'Remove this route', '路線名稱': 'Route name',
     '調整：範圍、名稱、線色、揹負、備註': 'Adjust: section, names, line, pack load, notes',
     '範圍': 'Section', '從': 'from', '到': 'to', '或': 'or', '全段': 'Full track', 'GPX 全長 {0} km': 'GPX length: {0} km',
-    '反轉方向': 'Reverse direction', '鏡像（原路折返）': 'Mirror (out and back)', '去除停留時的 GPS 漂移（實走紀錄）': 'Remove GPS drift from stops (recorded track)',
+    '反轉方向': 'Reverse direction', '鏡像（原路折返）': 'Mirror (out and back)', '折返點': 'Turnaround', '折返點名稱': 'Turnaround name', '去除停留時的 GPS 漂移（實走紀錄）': 'Remove GPS drift from stops (recorded track)',
     '實際距離': 'Posted distance', '留白＝用 GPX 量的距離；填里程樁的距離就等比例校正': 'Leave blank to use the GPX distance, or enter the distance on trail signs to scale the route to it.',
     '起點名稱': 'Start name', '終點名稱': 'End name', '線色': 'Line color', '圖上的點': 'Points shown on the card',
     '簡稱（表格、坡度帶用）': 'Short name (for the table and grade bands)',
@@ -647,10 +647,13 @@ details.help a{color:var(--accent);word-break:break-all}
     });
     r.wpts.forEach(function (w, wi) {   // a point added on the profile sits on one pass only: the one nearest where it was added
       if (!w.user || w.gone || !(w.f >= 0)) return;
-      var hint = userF(w, r.o) * cum[n - 1], mine = wp.filter(function (q) { return q.wi === wi; }), keep = null;
-      mine.forEach(function (q) { if (!keep || Math.abs(q.d - hint) < Math.abs(keep.d - hint)) keep = q; });
-      wp = wp.filter(function (q) { return q.wi !== wi || q === keep; });
-      if (keep) keep.id = wi + ':0';
+      var hf = userF(w, r.o), mine = wp.filter(function (q) { return q.wi === wi; });
+      function near(h) { var k = null; mine.forEach(function (q) { if (!k || Math.abs(q.d - h) < Math.abs(k.d - h)) k = q; }); return k; }
+      var keep = near(hf * cum[n - 1]), two = r.o.mir && !w.mir ? near((1 - hf) * cum[n - 1]) : null;   // mirrored: a point added on the one-way line shows on the way back too
+      if (two === keep) two = null;
+      wp = wp.filter(function (q) { return q.wi !== wi || q === keep || q === two; });
+      if (keep && two) { var lo = keep.d < two.d ? keep : two, hi = lo === keep ? two : keep; lo.id = wi + ':0'; hi.id = wi + ':1'; }
+      else if (keep) keep.id = wi + ':0';
     });
     wp.sort(function (x, y) { return x.d - y.d; });
     var hasE = P.map(function (q) { return q[2] !== null && isFinite(q[2]); });
@@ -738,7 +741,16 @@ details.help a{color:var(--accent);word-break:break-all}
     for (i = 0; i < b.cum.length; i++) if (b.hasE[i] && b.cum[i] >= Math.max(a, dA) && b.cum[i] <= Math.min(e, dB) && b.ele[i] > zmaxE) zmaxE = b.ele[i];
     var maxDup = mid.some(function (m) { return m.show && Math.abs(m.x - maxAt) < 150; });   // a named point already marks the top
     var startName = r.o.startName || (near0 && wname(near0)) || _t('起點');
-    var endName = r.o.endName || (near1 && wname(near1)) || (r.o.mir ? startName : r === mainR() ? _t('終點') : _t('目的'));
+    var endName = r.o.mir ? startName : r.o.endName || (near1 && wname(near1)) || (r === mainR() ? _t('終點') : _t('目的'));
+    if (r.o.mir) {   // mirrored: the old end is the turnaround, a point in the middle (unless a named place already marks it)
+      var dT = b.total / 2;
+      if (r.o.endName) mid.forEach(function (m) { if (Math.abs(a + m.x / sc - dT) <= 60 && !has(r.o.ptNames, m.id)) m.name = r.o.endName; });   // a typed end name names the turnaround
+      if (dT > a + 60 && dT < e - 60 && !b.wp.some(function (w) { return Math.abs(w.d - dT) <= 60; })) {
+        mid.push({ id: 'turn', name: r.o.endName || _t('折返點'), x: (dT - a) * sc, show: has(r.o.ptShow, 'turn') ? !!r.o.ptShow.turn : true });
+        mid.sort(function (u, v) { return u.x - v.x; });
+        mid.forEach(function (m) { if (m.id === 'turn') { m.z = zAt(X, Zs, m.x); m.ze = zAt(X, Z, m.x); } });
+      }
+    }
     return { x: X, z: Zs, len: L, raw: raw, gps: b.total, a: a, e: e, sc: sc, src: src, up: up, dn: dn, z0: Zs[0], z1: Zs[Zs.length - 1], zmin: zmin, zmax: zmax, zmaxE: zmaxE,
              net: Zs[Zs.length - 1] - Zs[0], steep: steep, steepD: steepD, cls: cls, ckm: ckm, km20: km20, km20d: km20d, mid: mid, startName: startName, endName: endName, scaled: r.o.real > 0,
              s300u: st3[0], s300d: st3[1], s1000u: st10[0], s1000d: st10[1], maxAt: maxAt, maxQ: maxQ, maxDup: maxDup,
@@ -1333,7 +1345,7 @@ details.help a{color:var(--accent);word-break:break-all}
           (r.recorded ? '<label class="ck"><input type="checkbox" data-k="dej"' + (r.o.dej ? ' checked' : '') + '>' + esc(_t('去除停留時的 GPS 漂移（實走紀錄）')) + '</label>' : '') +
           '<div class="inline">' + esc(_t('實際距離')) + ' <input type="number" data-k="real" step="0.1" min="0" inputmode="decimal" value="' + fmtKm(r.o.real) + '" aria-label="' + esc(_t('實際距離')) + '"> km</div><p class="hint">' + esc(_t('留白＝用 GPX 量的距離；填里程樁的距離就等比例校正')) + '</p>' +
           (isM ? '<label class="field">' + esc(_t('起點名稱')) + '<input type="text" data-k="startName" value="' + esc(r.o.startName) + '" placeholder="' + esc(r.p && !r.p.err ? r.p.startName : _t('起點')) + '"></label>' : '') +
-          '<label class="field">' + esc(_t('終點名稱')) + '<input type="text" data-k="endName" value="' + esc(r.o.endName) + '" placeholder="' + esc(r.p && !r.p.err ? r.p.endName : '') + '"></label>' +
+          '<label class="field">' + esc(_t(r.o.mir ? '折返點名稱' : '終點名稱')) + '<input type="text" data-k="endName" value="' + esc(r.o.endName) + '" placeholder="' + esc(r.o.mir ? _t('折返點') : r.p && !r.p.err ? r.p.endName : '') + '"></label>' +
           '<label class="field">' + esc(_t('簡稱（表格、坡度帶用）')) + '<input type="text" data-k="short" value="' + esc(r.o.short || '') + '" placeholder="' + esc(shortOf(r)) + '"></label>' +
           '<div class="setrow"><span>' + esc(_t('線色')) + '</span><div class="colors">' + colors + '</div></div>' + dashSel + loadSel +
           '<label class="ck"><input type="checkbox" data-k="inTable"' + (inTable(r) ? ' checked' : '') + '>' + esc(_t('列入坡度分級表')) + '</label>' +
@@ -1669,7 +1681,7 @@ details.help a{color:var(--accent);word-break:break-all}
     window.__edDo = edDo;
     box.addEventListener('input', function (e) {
       var el = e.target, r = edRoute(); if (!r || el.getAttribute('data-e') !== 'name' || !SEL.pt) return;
-      if (SEL.pt === 's') r.o.startName = el.value; else if (SEL.pt === 'e') r.o.endName = el.value; else r.o.ptNames[SEL.pt] = el.value;
+      if (SEL.pt === 's' || (SEL.pt === 'e' && r.o.mir)) r.o.startName = el.value; else if (SEL.pt === 'e' || SEL.pt === 'turn') r.o.endName = el.value; else r.o.ptNames[SEL.pt] = el.value;
       refresh(true); renderSoon();
     });
     box.addEventListener('change', function (e) {
