@@ -7,6 +7,7 @@ Put the distance–elevation profiles of several hiking routes on one chart and 
 ## Features
 
 - Load any number of GPX, KML or KMZ files; the chart draws the top 10 (each route can also be left off the chart). The first is the main route, shaded by grade every 100 m; drag a route by its handle to reorder the list or make it the main route
+- V16 | 2026-11-13 01:40 | One link per comparison: sharing again after changes asks whether to update the old link (everyone who has it opens the new version) or make a new one. The save panel and picture footer show the case code, version and time
 - Vertical axis is the elevation relative to the start: every line begins at 0 km and 0 m, so the chart compares steepness and length; actual elevations are written next to the place names (start, high point and end of the main route, end of every other route)
 - Elevations come straight from each GPX file; only points without elevation data are filled in from the Ministry of the Interior’s 20 m digital terrain model (Taiwan)
 - High-contrast line colors for screens, plus a distinct dash pattern for every comparison line so the chart still reads on a black-and-white laser printer; light colors get a dark outline, lines get a white edge where they cross the grade bands, and labels over the bands sit in framed boxes
