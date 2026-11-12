@@ -2,6 +2,7 @@
 
 Newest first. Each update of the page is one version. Times are Taiwan time (UTC+8).
 
+- V14 | 2026-11-12 21:20 | Mirror: points on the way back now take the name and on/off setting of the same point on the way out (rename either one and both change), and the high point is marked on the way back at its mirrored spot
 - V13 | 2026-11-12 20:25 | Mirror fixes: the old end becomes a turnaround point in the middle (named by the end name, or Turnaround), the end always shows the start name, and points you added on the one-way line now show on the way back too
 - V12 | 2026-11-12 19:30 | Mirror option next to Reverse: the route comes back the same way, so the line ends where it started and named points show on the way out and back; on phones the docked profile editor now always opens expanded, and when hidden it shows a large colored "Open profile editor" button
 - V11 | 2026-11-11 16:55 | Card legend now lists every route (main route first), each with a length bar under it on the same km scale as the profile, showing the pack load; the span arrows above the elevation profile are gone

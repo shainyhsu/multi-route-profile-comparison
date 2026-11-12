@@ -728,12 +728,19 @@ details.help a{color:var(--accent);word-break:break-all}
     var isMain = r === mainR(), maxAt = X[imax];
     var maxQ = zmax >= Math.max(Zs[0], Zs[Zs.length - 1]) + Math.max(15, 0.04 * (zmax - zmin)) && maxAt > 0.02 * L && maxAt < 0.98 * L;
     // named places in range
-    function wname(w) { return has(r.o.ptNames, w.id) ? r.o.ptNames[w.id] : w.name; }
+    var T2 = b.total / 2;
+    function nkey(w) {   // mirrored: a point on the way back takes its name and on/off from its twin on the way out
+      if (!r.o.mir || w.d <= T2 + 1) return w.id;
+      var tw = null; b.wp.forEach(function (q) { if (q.wi === w.wi && q.d <= T2 + 1 && (!tw || Math.abs(q.d - (b.total - w.d)) < Math.abs(tw.d - (b.total - w.d)))) tw = q; });
+      return tw && Math.abs(tw.d - (b.total - w.d)) < 300 ? tw.id : w.id;
+    }
+    function wname(w) { var k = nkey(w); return has(r.o.ptNames, k) ? r.o.ptNames[k] : w.name; }
     var near0 = null, near1 = null, mid = [];
     b.wp.forEach(function (w) {
+      var nk = nkey(w);
       if (Math.abs(w.d - a) <= 60 && !near0) near0 = w;
       else if (Math.abs(w.d - e) <= 60) near1 = w;
-      else if (w.d > a && w.d < e) mid.push({ id: w.id, name: wname(w), x: (w.d - a) * sc, show: has(r.o.ptShow, w.id) ? !!r.o.ptShow[w.id] : isMain });
+      else if (w.d > a && w.d < e) mid.push({ id: w.id, nk: nk, name: wname(w), x: (w.d - a) * sc, show: has(r.o.ptShow, nk) ? !!r.o.ptShow[nk] : isMain });
     });
     mid.forEach(function (m) { m.z = zAt(X, Zs, m.x); m.ze = zAt(X, Z, m.x); });   // z places the marker on the drawn line; ze is the elevation printed (GPX, unsmoothed)
     var zmaxE = -Infinity, dA = a + maxAt / sc - 100, dB = a + maxAt / sc + 100;   // printed high point: highest GPX value within 100 m of the top of the line
@@ -744,12 +751,18 @@ details.help a{color:var(--accent);word-break:break-all}
     var endName = r.o.mir ? startName : r.o.endName || (near1 && wname(near1)) || (r === mainR() ? _t('終點') : _t('目的'));
     if (r.o.mir) {   // mirrored: the old end is the turnaround, a point in the middle (unless a named place already marks it)
       var dT = b.total / 2;
-      if (r.o.endName) mid.forEach(function (m) { if (Math.abs(a + m.x / sc - dT) <= 60 && !has(r.o.ptNames, m.id)) m.name = r.o.endName; });   // a typed end name names the turnaround
+      if (r.o.endName) mid.forEach(function (m) { if (Math.abs(a + m.x / sc - dT) <= 60 && !has(r.o.ptNames, m.nk || m.id)) m.name = r.o.endName; });   // a typed end name names the turnaround
       if (dT > a + 60 && dT < e - 60 && !b.wp.some(function (w) { return Math.abs(w.d - dT) <= 60; })) {
         mid.push({ id: 'turn', name: r.o.endName || _t('折返點'), x: (dT - a) * sc, show: has(r.o.ptShow, 'turn') ? !!r.o.ptShow.turn : true });
-        mid.sort(function (u, v) { return u.x - v.x; });
-        mid.forEach(function (m) { if (m.id === 'turn') { m.z = zAt(X, Zs, m.x); m.ze = zAt(X, Z, m.x); } });
       }
+      if (maxQ && !maxDup) {   // the high point on the way out and its twin on the way back, as two points sharing one name
+        var mName = has(r.o.ptNames, 'max') && r.o.ptNames.max ? r.o.ptNames.max : _t('最高點'), mShow = has(r.o.ptShow, 'max') ? !!r.o.ptShow.max : isMain, dM = a + maxAt / sc, dM2 = b.total - dM;
+        mid.push({ id: 'max', nk: 'max', name: mName, x: maxAt, show: mShow });
+        if (dM2 > a + 60 && dM2 < e - 60 && Math.abs(dM2 - dM) > 150) mid.push({ id: 'max:1', nk: 'max', name: mName, x: (dM2 - a) * sc, show: mShow });
+        maxQ = false;
+      }
+      mid.sort(function (u, v) { return u.x - v.x; });
+      mid.forEach(function (m) { if (m.z === undefined) { m.z = zAt(X, Zs, m.x); m.ze = zAt(X, Z, m.x); } });
     }
     return { x: X, z: Zs, len: L, raw: raw, gps: b.total, a: a, e: e, sc: sc, src: src, up: up, dn: dn, z0: Zs[0], z1: Zs[Zs.length - 1], zmin: zmin, zmax: zmax, zmaxE: zmaxE,
              net: Zs[Zs.length - 1] - Zs[0], steep: steep, steepD: steepD, cls: cls, ckm: ckm, km20: km20, km20d: km20d, mid: mid, startName: startName, endName: endName, scaled: r.o.real > 0,
@@ -1322,7 +1335,7 @@ details.help a{color:var(--accent);word-break:break-all}
       }).join('');
       var ptsHtml = '';
       if (r.p && !r.p.err) {
-        var plist = r.p.mid.map(function (m) { return { id: m.id, name: m.name, x: m.x, show: m.show }; });
+        var plist = r.p.mid.map(function (m) { return { id: m.nk || m.id, name: m.name, x: m.x, show: m.show }; });
         if (isM && r.p.maxQ && !r.p.maxDup) plist.push({ id: 'max', name: r.p.maxName, x: r.p.maxAt, show: r.p.maxShow });
         plist.sort(function (p1, p2) { return p1.x - p2.x; });
         ptsHtml = plist.map(function (m) {
@@ -1507,9 +1520,10 @@ details.help a{color:var(--accent);word-break:break-all}
   var SEL = null, ED = null, EDRAG = false;   // SEL: { id: route id, x: metres along the drawn line, pt: point key or null }
   function edRoutes() { return shown().filter(function (r) { return r.p && !r.p.err; }); }
   function edRoute() { if (!SEL) return null; var r = edRoutes().filter(function (q) { return q.id === SEL.id; })[0]; return r || null; }
+  function edKey(r, k) { var m = r.p && r.p.mid ? r.p.mid.filter(function (q) { return q.id === k; })[0] : null; return m && m.nk ? m.nk : k; }
   function edPts(r) {
     var p = r.p, out = [{ key: 's', name: p.startName, x: 0, z: p.z0, show: true }, { key: 'e', name: p.endName, x: p.len, z: p.z1, show: true }];
-    p.mid.forEach(function (m) { var w = r.wpts[+String(m.id).split(':')[0]] || {}; out.push({ key: m.id, name: m.name, x: m.x, z: m.ze, show: m.show, user: !!w.user }); });
+    p.mid.forEach(function (m) { var w = r.wpts[+String(m.id).split(':')[0]] || {}; out.push({ key: m.id, nk: m.nk || m.id, name: m.name, x: m.x, z: m.ze, show: m.show, user: !!w.user }); });
     if (r === mainR() && p.maxQ && !p.maxDup) out.push({ key: 'max', name: p.maxName, x: p.maxAt, z: p.zmaxE, show: p.maxShow });
     return out;
   }
@@ -1681,12 +1695,12 @@ details.help a{color:var(--accent);word-break:break-all}
     window.__edDo = edDo;
     box.addEventListener('input', function (e) {
       var el = e.target, r = edRoute(); if (!r || el.getAttribute('data-e') !== 'name' || !SEL.pt) return;
-      if (SEL.pt === 's' || (SEL.pt === 'e' && r.o.mir)) r.o.startName = el.value; else if (SEL.pt === 'e' || SEL.pt === 'turn') r.o.endName = el.value; else r.o.ptNames[SEL.pt] = el.value;
+      if (SEL.pt === 's' || (SEL.pt === 'e' && r.o.mir)) r.o.startName = el.value; else if (SEL.pt === 'e' || SEL.pt === 'turn') r.o.endName = el.value; else r.o.ptNames[edKey(r, SEL.pt)] = el.value;
       refresh(true); renderSoon();
     });
     box.addEventListener('change', function (e) {
       var el = e.target, r = edRoute(); if (!r || el.getAttribute('data-e') !== 'show' || !SEL.pt) return;
-      r.o.ptShow[SEL.pt] = el.checked; refresh(); renderSoon();
+      r.o.ptShow[edKey(r, SEL.pt)] = el.checked; refresh(); renderSoon();
     });
   }
   var drawSoon = debounce(drawPreview, 60);
