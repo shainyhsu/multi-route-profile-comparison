@@ -2,6 +2,7 @@
 
 Newest first. Each update of the page is one version. Times are Taiwan time (UTC+8).
 
+- V19 | 2026-11-13 09:36 | Added a classic favicon.ico tab icon for older browsers and search tools.
 - V18 | 2026-11-13 09:20 | Added a tab icon and an "All tools" link in the footer; the GPX upload has a label for screen readers.
 - V17 | 2026-11-13 07:40 | The A4 share picture fills its pages: when it runs just over a page (up to about 18%), the whole layout is shrunk to fit one page fewer, and the room left on a nearly full page is spread between its parts instead of sitting blank at the bottom
 - V16 | 2026-11-13 01:40 | One link per comparison: sharing again after changes asks whether to update the old link (everyone who has it opens the new version) or make a new one. The save panel and picture footer show the case code, version and time
