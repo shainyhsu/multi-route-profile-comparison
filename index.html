@@ -469,11 +469,11 @@ details.help a{color:var(--accent);word-break:break-all}
     if (out.pts.length < 2) throw new Error(_t('軌跡點太少，無法計算。'));
     return out;
   }
-  var JSZIP_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', jszipP = null;
+  var JSZIP_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', JSZIP_SRI = 'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG', jszipP = null;
   function loadJSZip() {
     if (window.JSZip) return Promise.resolve(window.JSZip);
     if (!jszipP) jszipP = new Promise(function (ok, no) {
-      var s = document.createElement('script'); s.src = JSZIP_URL; s.async = true;
+      var s = document.createElement('script'); s.src = JSZIP_URL; s.async = true; s.integrity = JSZIP_SRI; s.crossOrigin = 'anonymous'; s.referrerPolicy = 'no-referrer';
       s.onload = function () { window.JSZip ? ok(window.JSZip) : no(new Error(_t('KMZ 需要連上網路才能解開。'))); };
       s.onerror = function () { jszipP = null; no(new Error(_t('KMZ 需要連上網路才能解開。'))); };
       document.head.appendChild(s);
@@ -1358,7 +1358,7 @@ details.help a{color:var(--accent);word-break:break-all}
   function fmtKm(v) { return v === null || v === undefined || v === '' ? '' : String(Math.round(v * 100) / 100); }
   function renderList() {
     var box = $('rts'), M = mainR(), th = PAL;
-    if (!ROUTES.length) { box.innerHTML = ''; return; }
+    if (!ROUTES.length) { box.replaceChildren(); return; }
     fixColors();
     box.innerHTML = ROUTES.map(function (r, ri) {
       var b = base(r), isM = r === M;
@@ -1538,7 +1538,7 @@ details.help a{color:var(--accent);word-break:break-all}
     var D = cardData(), box = $('pages'), em = $('prevEmpty');
     $('btnSave').disabled = !D; $('btnShare').disabled = !D;
     drawEdit(); if (!$('edPanel').contains(document.activeElement)) renderEdit();
-    if (!D) { box.innerHTML = ''; box.hidden = true; em.hidden = false; $('outInfo').textContent = ''; $('btnSave').lastChild.nodeValue = _t('下載 JPG'); return; }
+    if (!D) { box.replaceChildren(); box.hidden = true; em.hidden = false; $('outInfo').textContent = ''; $('btnSave').lastChild.nodeValue = _t('下載 JPG'); return; }
     var doc = buildDoc(D, S.ori), dpr = Math.min(2, window.devicePixelRatio || 1), wcss = Math.max(240, box.clientWidth || $('prev').clientWidth || 600);
     if (window.matchMedia && window.matchMedia('(min-width: 980px)').matches) wcss = Math.max(240, Math.min(wcss, Math.floor(Math.max(420, window.innerHeight - 170) * doc.W / doc.H)));
     while (box.children.length > doc.n) box.removeChild(box.lastChild);
